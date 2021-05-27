@@ -8,12 +8,12 @@ import numpy as np
 class m04(keras.Model):
     def __init__(self, out_sz):
         super(m04, self).__init__()
-        FL = keras1.layers.CuDNNGRU(out_sz, return_sequences=True)
-        BL = keras1.layers.CuDNNGRU(out_sz, go_backwards=True, return_sequences=True)
-        FL2 = keras1.layers.CuDNNGRU(out_sz//2, return_sequences=True)
-        BL2 = keras1.layers.CuDNNGRU(out_sz//2, go_backwards=True, return_sequences=True)        
-        self.GRU = keras.layers.Bidirectional(FL, backward_layer=BL)
-        self.GRU2 = keras.layers.Bidirectional(FL2, backward_layer=BL2) 
+        FL = keras1.layers.CuDNNLSTM(out_sz, return_sequences=True)
+        BL = keras1.layers.CuDNNLSTM(out_sz, go_backwards=True, return_sequences=True)
+        FL2 = keras1.layers.CuDNNLSTM(out_sz//2, return_sequences=True)
+        BL2 = keras1.layers.CuDNNLSTM(out_sz//2, go_backwards=True, return_sequences=True)        
+        self.LSTM = keras.layers.Bidirectional(FL, backward_layer=BL)
+        self.LSTM2 = keras.layers.Bidirectional(FL2, backward_layer=BL2) 
         self.Cv = keras.Sequential([
             keras.layers.Conv1D(32, kernel_size=5),
             keras.layers.BatchNormalization(),
@@ -30,8 +30,8 @@ class m04(keras.Model):
         ])       
 
     def call(self, x):
-        y1 = self.GRU(x)
-        y2 = self.GRU2(y1)
+        y1 = self.LSTM(x)
+        y2 = self.LSTM2(y1)
         y3 = tf.transpose(y2, perm=[0, 2, 1])
         y4 = self.Cv(y3)
         y = self.FC(y4)        
