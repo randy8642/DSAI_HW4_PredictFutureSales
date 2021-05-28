@@ -25,19 +25,18 @@ class QRNNLayer(keras.layers.Layer):
         # memory: [batch_size x memory_size]
 
         # transpose inputs to feed in conv1d: [batch_size x hidden_size x length]
-        print(inputs.shape)
         inputs_ = tf.transpose(inputs, perm=[0, 2, 1])
-        print(inputs_.shape)
+
         padded = tf.pad(inputs_, paddings=[
                         [0, 0], [0, 0], [self.kernel_size-1, 0]])
-        print(padded.shape)
+        
         # gates: [batch_size x length x 3*hidden_size]
         gates = tf.transpose(self.conv1d(padded), perm=[0, 2, 1])
-        print(gates.shape)
+        
         if memory is not None:
             # broadcast memory
             gates = gates + tf.expand_dims(self.conv_linear(memory), axis=1)
-        print(gates.shape)
+        
         # Z, F, O: [batch_size x length x hidden_size]
         Z, F, O = tf.split(gates, num_or_size_splits=3, axis=2)
         return tf.tanh(Z), tf.sigmoid(F), tf.sigmoid(O)
@@ -89,7 +88,10 @@ class predictModel(keras.Model):
 
         # self.lstm = keras.layers.GRU(30, activation='tanh')
         self.qrnn_layers = list()
-        self.qrnn_layers.append(QRNNLayer(hidden_size=256, kernel_size=3, use_attn=False)) 
+        n_layers = 2
+        for layer_idx in range(n_layers):            
+            use_attn = True if layer_idx == n_layers-1 else False            
+            self.qrnn_layers.append(QRNNLayer(hidden_size=30, kernel_size=3, use_attn=use_attn)) 
 
         self.dense_1 = keras.layers.Dense(10, activation='tanh')
         self.dense_2 = keras.layers.Dense(1)
