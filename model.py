@@ -70,9 +70,11 @@ class QRNNLayer(keras.layers.Layer):
         
         # Z, F, O: [batch_size x length x hidden_size]
         Z, F, O = self._conv_step(tf.transpose(inputs, perm=[0,2,1]), conv_memory)
-        print(Z.shape, F.shape, O.shape)
+        
+        
         c_time, h_time = [], []
-        for time, (z, f, o) in enumerate(zip(tf.split(Z, num_or_size_splits=1, axis=1), tf.split(F, num_or_size_splits=1, axis=1), tf.split(O, num_or_size_splits=1, axis=1))):
+        for time, (z, f, o) in enumerate(zip(tf.split(Z, num_or_size_splits=[1]*Z.shape[1], axis=1), tf.split(F, num_or_size_splits=[1]*F.shape[1], axis=1), tf.split(O, num_or_size_splits=[1]*O.shape[1], axis=1))):
+            
             c, h = self._rnn_step(z, f, o, c, attn_memory)
             c_time.append(c)
             h_time.append(h)
@@ -97,28 +99,21 @@ class predictModel(keras.Model):
         
         h = tf.transpose(inputs, perm=[0, 2, 1])
 
-        cell_states, hidden_states = [], []
-        for layer in self.qrnn_layers:
+        cell_states, hidden_states = [None], [None]
+        for i,layer in enumerate(self.qrnn_layers):
             
-            c, h = layer(h)  # c, h: [batch_size x length x hidden_size]     
-            print(c.shape)
-            print(h.shape)
-            exit()       
-            # time = Variable(torch.arange(0, h.size(1)).unsqueeze(-1).expand_as(h).long())
-            # if h.is_cuda:
-            #     time = time.cuda()
-            # # mask to support variable seq lengths: TODO: use .masked_fill()
-            # mask = (input_len.unsqueeze(-1).unsqueeze(-1) > time).float()
-            # h = h * mask
+            c, h = layer(h, state=cell_states[i], memory=hidden_states[i])  # c, h: [batch_size x length x hidden_size]     
+                  
 
             # c_last, h_last: [batch_size, hidden_size]           
-            c_last = c[range(len(inputs)), (input_len-1).data,:]
-            h_last = h[range(len(inputs)), (input_len-1).data,:]
+            c_last = c[:, -1, :]
+            h_last = h[:, -1, :]
             cell_states.append(c_last)
-            hidden_states.append((h_last, h))
+            hidden_states.append((h_last, h))            
 
-        pred = self.qrnn(x)
-        pred = self.dense_1(pred)
+        _, hidden = hidden_states[-1]
+
+        pred = self.dense_1(hidden)
         pred = self.dense_2(pred)
 
         return pred
