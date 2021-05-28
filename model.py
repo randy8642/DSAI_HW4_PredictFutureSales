@@ -88,10 +88,10 @@ class predictModel(keras.Model):
 
         # self.lstm = keras.layers.GRU(30, activation='tanh')
         self.qrnn_layers = list()
-        n_layers = 2
+        n_layers = 1
         for layer_idx in range(n_layers):            
-            use_attn = True if layer_idx == n_layers-1 else False            
-            self.qrnn_layers.append(QRNNLayer(hidden_size=30, kernel_size=3, use_attn=use_attn)) 
+            #use_attn = True if layer_idx == n_layers-1 else False            
+            self.qrnn_layers.append(QRNNLayer(hidden_size=30, kernel_size=3, use_attn=False)) 
 
         self.dense_1 = keras.layers.Dense(10, activation='tanh')
         self.dense_2 = keras.layers.Dense(1)
