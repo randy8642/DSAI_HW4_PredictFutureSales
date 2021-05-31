@@ -10,8 +10,11 @@ def _RMSE(pred, real):
     rmse = math.sqrt(mse)
     return rmse
 
-def _PACK(x, nF, L=True):
-    month = x.shape[0]
+def _PACK(x, nF, L=True, Tra=True):
+    if Tra:
+        month = 33
+    else:
+        month = 1
     Tra_array = np.zeros([month, 60, 22170])
     for m in range(Tra_array.shape[0]):
         nF_m = nF[nF[:,0]==m]
@@ -35,8 +38,10 @@ Val = nF[nF[:,0]==33]
 
 Tra_data = _PACK(Tra, nF, L=False)
 Tra_label = _PACK(Tra, nF)
-Val_data = _PACK(Val, nF, L=False)
-Val_label = _PACK(Val, nF)
+Val_data = _PACK(Val, nF, L=False, Tra=False)
+Val_label = _PACK(Val, nF, Tra=False)
+
+
 # #%%
 # Tra_data = Tra[:,:3]
 # Tra_label = Tra[:,-1]
