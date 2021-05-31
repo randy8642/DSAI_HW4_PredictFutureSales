@@ -4,8 +4,10 @@ import os
 
 path = '../data'
 Ftra = 'sales_train.csv'
+Data_tra = pd.read_csv(os.path.join(path, Ftra), low_memory=False)
+data_tra_s = Data_tra.sort_values(by=['date_block_num', 'shop_id', 'item_id'])
+data_tra = np.array(data_tra_s)[1:,:]
 
-data_tra = np.array(pd.read_csv(os.path.join(path, Ftra), header=None, low_memory=False))[1:,:]
 id_m = 0
 RES_m = []
 for id_m in range(34):
