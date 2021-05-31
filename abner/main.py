@@ -42,21 +42,15 @@ Val_data = _PACK(Val, nF, L=False, Tra=False)
 Val_label = _PACK(Val, nF, Tra=False)
 
 
-# #%%
-# Tra_data = Tra[:,:3]
-# Tra_label = Tra[:,-1]
+#%%
+model = linear_model.Lasso(alpha=1e-2)
+model.fit(Tra_data, Tra_label)
 
-# #%%
-# model = linear_model.Lasso(alpha=1e-2)
-# model.fit(Tra_data, Tra_label)
+#%%
+pred = model.predict(Val_data)
+Gs = _RMSE(pred, Val_label)
+print("RMSE >> ", Gs)
 
-# #%%
-# Val_data = Val[:,:3]
-# Val_label = Val[:,-1]
-# pred = model.predict(Val_data)
-# Gs = _RMSE(pred, Val_label)
-# print("RMSE >> ", Gs)
-
-# #%%
-# tEnd = time.time()
-# print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
+#%%
+tEnd = time.time()
+print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
