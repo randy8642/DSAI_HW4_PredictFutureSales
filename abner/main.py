@@ -10,29 +10,48 @@ def _RMSE(pred, real):
     rmse = math.sqrt(mse)
     return rmse
 
+def _PACK(x, nF, L=True):
+    month = x.shape[0]
+    Tra_array = np.zeros([month, 60, 22170])
+    for m in range(Tra_array.shape[0]):
+        nF_m = nF[nF[:,0]==m]
+        for i in range(Tra_array.shape[1]):
+            sh = nF_m[nF_m[:,1]==i]
+            for j in range(Tra_array.shape[-1]):
+                im = sh[sh[:,2]==j]
+                if im.shape[0]==0:
+                    Tra_array[m, i, j] = 0
+                else:
+                    if L:
+                        Tra_array[m, i, j] = im[0,-1]
+                    else:
+                        Tra_array[m, i, j] = 1
+    return Tra_array
 
 nF = np.load('res.npy')
 Tra = nF[nF[:,0]!=33]
 Val = nF[nF[:,0]==33]
 
-Tra_array = np.zeros([33, 60, 22170])
 
+Tra_data = _PACK(Tra, nF, L=False)
+Tra_label = _PACK(Tra, nF)
+Val_data = _PACK(Val, nF, L=False)
+Val_label = _PACK(Val, nF)
+# #%%
+# Tra_data = Tra[:,:3]
+# Tra_label = Tra[:,-1]
 
-#%%
-Tra_data = Tra[:,:3]
-Tra_label = Tra[:,-1]
+# #%%
+# model = linear_model.Lasso(alpha=1e-2)
+# model.fit(Tra_data, Tra_label)
 
-#%%
-model = linear_model.Lasso(alpha=1e-2)
-model.fit(Tra_data, Tra_label)
+# #%%
+# Val_data = Val[:,:3]
+# Val_label = Val[:,-1]
+# pred = model.predict(Val_data)
+# Gs = _RMSE(pred, Val_label)
+# print("RMSE >> ", Gs)
 
-#%%
-Val_data = Val[:,:3]
-Val_label = Val[:,-1]
-pred = model.predict(Val_data)
-Gs = _RMSE(pred, Val_label)
-print("RMSE >> ", Gs)
-
-#%%
-tEnd = time.time()
-print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
+# #%%
+# tEnd = time.time()
+# print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
