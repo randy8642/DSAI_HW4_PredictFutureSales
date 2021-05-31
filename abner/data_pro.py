@@ -12,7 +12,7 @@ id_m = 0
 RES_m = []
 for id_m in range(34):
     print('month >> ', str(id_m))
-    A = data_tra[data_tra[:,1]==str(id_m)]
+    A = data_tra[data_tra[:,1]==id_m]
     #%%
     shop_id = '666'
     item_id = '1019'
