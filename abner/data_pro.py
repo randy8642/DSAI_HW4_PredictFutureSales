@@ -15,7 +15,7 @@ data_tes = np.array(Data_tes)
 tes_Z = np.zeros([len(data_tes), 33])
 # id_m = 20
 for ns in range(len(data_tes)):
-    print('=====Process >> ' + str(ns) + '/' + str(len(data_tes)) + '=====', "\r" )
+    print('=====Process >> ' + str(ns) + '/' + str(len(data_tes)) + '=====', "\r", end=' ')
     shop_id = data_tes[ns, 1]
     item_id = data_tes[ns, -1]
     B = data_tra[data_tra[:, 2]==shop_id]
