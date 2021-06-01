@@ -4,10 +4,30 @@ import os
 
 path = '../data'
 Ftra = 'sales_train.csv'
+Ftes = 'test.csv'
 Data_tra = pd.read_csv(os.path.join(path, Ftra), low_memory=False)
+Data_tes = pd.read_csv(os.path.join(path, Ftes), low_memory=False)
 data_tra_s = Data_tra.sort_values(by=['date_block_num', 'shop_id', 'item_id'])
 data_tra = np.array(data_tra_s)[1:,:]
+data_tes = np.array(Data_tes)
 
+#%%
+tes_Z = np.zeros([len(data_tes), 33])
+# id_m = 0
+for id_m in range(tes_Z.shape[1]):
+    A = data_tra[data_tra[:,1]==id_m]
+# ns = 0
+    for ns in range(len(data_tes)):
+        shop_id = data_tes[ns, 1]
+        item_id = data_tes[ns, -1]
+        B = A[A[:, 2]==shop_id]
+        C = B[B[:, 3]==item_id]  
+        if C.shape[0]==0:
+            tes_Z[ns, id_m] = 0
+        else:
+            tes_Z[ns, id_m] = np.sum(C[:, -1])
+
+'''
 id_m = 0
 RES_m = []
 for id_m in range(34):
@@ -30,3 +50,4 @@ for id_m in range(34):
     RES_m.append(res)
 res_m = np.vstack(RES_m)
 np.save('res.npy', res_m)
+'''
