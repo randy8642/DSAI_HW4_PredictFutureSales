@@ -15,11 +15,13 @@ data_tes = np.array(Data_tes)
 tes_Z = np.zeros([len(data_tes), 33])
 # id_m = 20
 for ns in range(len(data_tes)):
+    print("\nProcess >> ", str((ns+1)/len(data_tes)))
     shop_id = data_tes[ns, 1]
     item_id = data_tes[ns, -1]
     B = data_tra[data_tra[:, 2]==shop_id]
     C = B[B[:, 3]==item_id]  
     for id_m in range(tes_Z.shape[1]):
+        print("Month >> ", str(id_m))
         A = C[C[:,1]==id_m]
         if A.shape[0]==0:
             tes_Z[ns, id_m] = 0
