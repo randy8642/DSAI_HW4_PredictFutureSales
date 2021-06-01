@@ -2,6 +2,7 @@ import numpy as np
 import sklearn
 import math
 from sklearn import linear_model
+import pandas as pd
 import xgboost as xgb
 import time
 tStart = time.time()
@@ -34,16 +35,26 @@ Tra_label = nF[:, 31]
 Val_data = nF[:, 1:32]
 Val_label = nF[:, 32]
 
+Tes_data = nF[:, 2:]
+
 dtrain = xgb.DMatrix(Tra_data, Tra_label)
 dtest = xgb.DMatrix(Val_data)
 num_rounds = 500
 
 #%%
-model = xgb.train(params, dtrain, num_rounds)
+# model = xgb.train(params, dtrain, num_rounds)
+model = linear_model.Lasso(alpha=0.1)
+model.fit(Tra_data, Tra_label)
 #%%
-pred = model.predict(dtest)
+# pred = model.predict(dtest)
+pred = model.predict(Val_data)
 Gs = _RMSE(pred, Val_label)
 print("RMSE >> ", Gs)
 #%%
+pred_tes = model.predict(Tes_data)
+id_list = np.arange(0, len(pred_tes), 1).astype(str)
+D = np.vstack([id_list, pred]).T
+df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
+df.to_csv('Lasso_IDxMonth.csv', index=False)
 tEnd = time.time()
 print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
