@@ -43,6 +43,12 @@ Val_label = _PACK(Val, nF, Tra=False)
 
 
 #%%
+Tra_data = np.reshape(Tra_data, (Tra_data.shape[0],-1))
+Tra_label = np.reshape(Tra_label, (Tra_label.shape[0],-1))
+Val_data = np.reshape(Val_data, (Val_data.shape[0],-1))
+Val_label = np.reshape(Val_label, (Val_label.shape[0],-1))
+
+#%%
 model = linear_model.Lasso(alpha=1e-2)
 model.fit(Tra_data, Tra_label)
 
