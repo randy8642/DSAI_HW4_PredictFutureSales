@@ -2,6 +2,7 @@ import numpy as np
 import sklearn
 import math
 from sklearn import linear_model
+import xgboost as xgb
 import time
 tStart = time.time()
 
@@ -10,53 +11,39 @@ def _RMSE(pred, real):
     rmse = math.sqrt(mse)
     return rmse
 
-def _PACK(x, nF, L=True, Tra=True):
-    if Tra:
-        month = 33
-    else:
-        month = 1
-    Tra_array = np.zeros([month, 60, 22170])
-    for m in range(Tra_array.shape[0]):
-        nF_m = nF[nF[:,0]==m]
-        for i in range(Tra_array.shape[1]):
-            sh = nF_m[nF_m[:,1]==i]
-            for j in range(Tra_array.shape[-1]):
-                im = sh[sh[:,2]==j]
-                if im.shape[0]==0:
-                    Tra_array[m, i, j] = 0
-                else:
-                    if L:
-                        Tra_array[m, i, j] = im[0,-1]
-                    else:
-                        Tra_array[m, i, j] = 1
-    return Tra_array
+# 演算法引數
+params = {
+    'booster':'gbtree',
+    "reg" : "linear", 
+    'gamma':0.1,
+    'max_depth':6,
+    'lambda':2,
+    'subsample':0.7,
+    'colsample_bytree':0.7,
+    'min_child_weight':3,
+    'slient':1,
+    'eta':0.1,
+    'seed':1000,
+    'nthread':4,
+}
+plst = params.items()
+nF = np.load('tes_Z.npy')
+Tra_data = nF[:, :31]
+Tra_label = nF[:, 31]
 
-nF = np.load('res.npy')
-Tra = nF[nF[:,0]!=33]
-Val = nF[nF[:,0]==33]
+Val_data = nF[:, 1:32]
+Val_label = nF[:, 32]
 
-
-Tra_data = _PACK(Tra, nF, L=False)
-Tra_label = _PACK(Tra, nF)
-Val_data = _PACK(Val, nF, L=False, Tra=False)
-Val_label = _PACK(Val, nF, Tra=False)
-
+dtrain = xgb.DMatrix(Tra_data, Tra_label)
+dtest = xgb.DMatrix(Val_data)
+num_rounds = 500
 
 #%%
-Tra_data = np.reshape(Tra_data, (Tra_data.shape[0],-1))
-Tra_label = np.reshape(Tra_label, (Tra_label.shape[0],-1))
-Val_data = np.reshape(Val_data, (Val_data.shape[0],-1))
-Val_label = np.reshape(Val_label, (Val_label.shape[0],-1))
-
+model = xgb.train(params, dtrain, num_rounds)
 #%%
-model = linear_model.Lasso(alpha=1e-2)
-model.fit(Tra_data, Tra_label)
-
-#%%
-pred = model.predict(Val_data)
+pred = model.predict(dtest)
 Gs = _RMSE(pred, Val_label)
 print("RMSE >> ", Gs)
-
 #%%
 tEnd = time.time()
 print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
