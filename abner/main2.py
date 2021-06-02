@@ -7,7 +7,7 @@ import tensorflow.keras as keras
 import tensorflow as tf
 import pandas as pd
 import time
-import model
+import model_tf
 import config
 tStart = time.time()
 
@@ -37,7 +37,7 @@ Tes_data = np.hstack((ID, Tes_data))
 
 # #%%
 bz = config.batch
-model = model.m04
+model = model_tf.m04(64)
 optim_m = keras.optimizers.Adam(learning_rate=config.lr, amsgrad=config.amsgrad)
 model.compile(optimizer=optim_m, 
               loss=keras.losses.MeanSquaredError(reduction="auto", 

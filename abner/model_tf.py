@@ -3,11 +3,13 @@ import os
 import tensorflow as tf
 import tensorflow.compat.v1.keras as keras1
 import tensorflow.keras as keras
+import config
 import numpy as np
 
 class m04(keras.Model):
     def __init__(self, out_sz):
         super(m04, self).__init__()
+        self.IN = keras.layers.InputLayer((2,), batch_size=config.batch)
         FL = keras1.layers.CuDNNLSTM(out_sz, return_sequences=True)
         BL = keras1.layers.CuDNNLSTM(out_sz, go_backwards=True, return_sequences=True)
         self.LSTM = keras.layers.Bidirectional(FL, backward_layer=BL)
@@ -21,8 +23,6 @@ class m04(keras.Model):
         ])       
 
     def call(self, x):
-        bz = x.shape[0]
-        print(bz)
         y1 = self.LSTM(x)
         y = self.FC(y1) 
         return y
