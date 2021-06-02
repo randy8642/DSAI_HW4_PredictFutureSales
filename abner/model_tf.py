@@ -12,7 +12,10 @@ class m04(keras.Model):
         self.IN = keras.layers.InputLayer((2,), batch_size=config.batch)
         FL = keras1.layers.CuDNNLSTM(out_sz, return_sequences=True)
         BL = keras1.layers.CuDNNLSTM(out_sz, go_backwards=True, return_sequences=True)
+        FL2 = keras1.layers.CuDNNLSTM(out_sz//2, return_sequences=True)
+        BL2 = keras1.layers.CuDNNLSTM(out_sz//2, go_backwards=True, return_sequences=True)           
         self.LSTM = keras.layers.Bidirectional(FL, backward_layer=BL)
+        self.LSTM2 = keras.layers.Bidirectional(FL2, backward_layer=BL2) 
         self.FC = keras.Sequential([
             keras.layers.Flatten(),
             keras.layers.Dense(256),
@@ -24,7 +27,8 @@ class m04(keras.Model):
 
     def call(self, x):
         y1 = self.LSTM(x)
-        y = self.FC(y1) 
+        y2 = self.LSTM2(y1)
+        y = self.FC(y2) 
         return y
 
 #%% Test
