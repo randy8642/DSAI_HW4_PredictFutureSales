@@ -12,9 +12,16 @@ import config
 tStart = time.time()
 
 def _RMSE(pred, real):
-    mse = sklearn.metrics.mean_squared_error(pred, real)
-    rmse = math.sqrt(mse)
-    return rmse
+  mse = sklearn.metrics.mean_squared_error(pred, real)
+  rmse = math.sqrt(mse)
+  return rmse
+
+def _Nor(x):
+  mu = np.mean(x)
+  std = np.std(x)
+  nor = (x-mu)/std
+  return nor
+  
 
 nF = np.load('tes_Z.npy')
 
@@ -24,27 +31,26 @@ Data_tes = pd.read_csv(os.path.join(path, Ftes), low_memory=False)
 Data_tra = np.load('tes_Z.npy')
 ID = np.array(Data_tes)[:, 1:3]
 
-Tra_data = nF[:, 28:31]
-Tra_data = np.hstack((ID, Tra_data))
+Tra_data = nF[:, :31]
+Tra_data = _Nor(np.hstack((ID, Tra_data))[:,np.newaxis,:])
 Tra_label = nF[:, 31]
 
-Val_data = nF[:, 29:32]
-Val_data = np.hstack((ID, Val_data))
+Val_data = nF[:, 1:32]
+Val_data = _Nor(np.hstack((ID, Val_data))[:,np.newaxis,:])
 Val_label = nF[:, 32]
 
-Tes_data = nF[:, 30:33]
-Tes_data = np.hstack((ID, Tes_data))
+Tes_data = nF[:, 2:]
+Tes_data = _Nor(np.hstack((ID, Tes_data))[:,np.newaxis,:])
 
 # #%%
 bz = config.batch
 model = model_tf.m04(64)
 optim_m = keras.optimizers.Adam(learning_rate=config.lr, amsgrad=config.amsgrad)
 model.compile(optimizer=optim_m, 
-              loss=keras.losses.MeanSquaredError(reduction="auto", 
-                name="mean_squared_error"),
+              loss=keras.losses.Huber(),
               metrics=['accuracy'])
 history = model.fit(Tra_data, Tra_label, batch_size=bz,
-                    epochs=config.Epoch, verbose=2, shuffle=True,
+                    epochs=config.Epoch, verbose=1, shuffle=True,
                     validation_data=(Val_data, Val_label))
 
 loss = np.array(history.history['loss'])

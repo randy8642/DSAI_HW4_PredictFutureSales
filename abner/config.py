@@ -1,5 +1,5 @@
-batch = 32
-lr = 1e-3
+batch = 1024
+lr = 1e-4
 amsgrad=True
-Epoch = 20
+Epoch = 30
 seed = 0
