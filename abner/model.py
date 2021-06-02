@@ -16,16 +16,16 @@ class m04(keras.Model):
             keras.layers.Dense(256),
             keras.layers.ReLU(),            
             keras.layers.Dense(64),
-            keras.layers.ReLU()
+            keras.layers.ReLU(),
+            keras.layers.Dense(1)
         ])       
 
     def call(self, x):
         bz = x.shape[0]
         print(bz)
         y1 = self.LSTM(x)
-        y5 = self.FC(y1) 
-        # y = keras.layers.Dense(bz)(y5)
-        return y5   
+        y = self.FC(y1) 
+        return y
 
 #%% Test
 if __name__ == "__main__":
