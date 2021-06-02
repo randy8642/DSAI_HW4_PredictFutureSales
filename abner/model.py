@@ -10,36 +10,26 @@ class m04(keras.Model):
         super(m04, self).__init__()
         FL = keras1.layers.CuDNNLSTM(out_sz, return_sequences=True)
         BL = keras1.layers.CuDNNLSTM(out_sz, go_backwards=True, return_sequences=True)
-        FL2 = keras1.layers.CuDNNLSTM(out_sz//2, return_sequences=True)
-        BL2 = keras1.layers.CuDNNLSTM(out_sz//2, go_backwards=True, return_sequences=True)        
         self.LSTM = keras.layers.Bidirectional(FL, backward_layer=BL)
-        self.LSTM2 = keras.layers.Bidirectional(FL2, backward_layer=BL2) 
-        self.Cv = keras.Sequential([
-            keras.layers.Conv1D(32, kernel_size=5),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),   
-            keras.layers.Conv1D(16, kernel_size=1)
-        ])            
         self.FC = keras.Sequential([
             keras.layers.Flatten(),
             keras.layers.Dense(256),
             keras.layers.ReLU(),            
             keras.layers.Dense(64),
-            keras.layers.ReLU(),
-            keras.layers.Dense(24)
+            keras.layers.ReLU()
         ])       
 
     def call(self, x):
+        bz = x.shape[0]
+        print(bz)
         y1 = self.LSTM(x)
-        y2 = self.LSTM2(y1)
-        y3 = tf.transpose(y2, perm=[0, 2, 1])
-        y4 = self.Cv(y3)
-        y = self.FC(y4)        
-        return y     
+        y5 = self.FC(y1) 
+        # y = keras.layers.Dense(bz)(y5)
+        return y5   
 
 #%% Test
 if __name__ == "__main__":
-    IN = np.random.rand(1,7,48)
-    F = m04(128)
+    IN = np.random.rand(32,3,33)
+    F = m04(64)
     Gen = F(IN)
     print('Gen >>', Gen.shape)
