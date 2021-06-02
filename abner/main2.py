@@ -2,11 +2,13 @@ import numpy as np
 import sklearn
 import math
 import os
-import matplotlib.pyplot  as plt
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import tensorflow.keras as keras
+import tensorflow as tf
 import pandas as pd
-import xgboost as xgb
-from xgboost import plot_importance
 import time
+import model
+import config
 tStart = time.time()
 
 def _RMSE(pred, real):
@@ -14,22 +16,6 @@ def _RMSE(pred, real):
     rmse = math.sqrt(mse)
     return rmse
 
-# 演算法引數
-params = {
-    'booster':'gbtree',
-    "reg" : "linear", 
-    'gamma':0.1,
-    'max_depth':6,
-    'lambda':2,
-    'subsample':0.7,
-    'colsample_bytree':0.7,
-    'min_child_weight':3,
-    'slient':1,
-    'eta':0.1,
-    'seed':1000,
-    'nthread':4,
-}
-plst = params.items()
 nF = np.load('tes_Z.npy')
 
 path = '../data'
@@ -49,29 +35,26 @@ Val_label = nF[:, 32]
 Tes_data = nF[:, 30:33]
 Tes_data = np.hstack((ID, Tes_data))
 
-dtrain = xgb.DMatrix(Tra_data, Tra_label)
-dvalid = xgb.DMatrix(Val_data)
-dtest = xgb.DMatrix(Tes_data)
-num_rounds = 500
-
 # #%%
-model = xgb.train(params, dtrain, num_rounds)
-# plot_importance(model)
-# plt.show()
-# model = linear_model.Lasso(alpha=0.1)
-# model.fit(Tra_data, Tra_label)
+bz = config.batch
+model = model.m04
+optim_m = keras.optimizers.Adam(learning_rate=config.lr, amsgrad=config.amsgrad)
+model.compile(optimizer=optim_m, 
+              loss=keras.losses.MeanSquaredError(reduction="auto", 
+                name="mean_squared_error"),
+              metrics=['accuracy'])
+history = model.fit(Tra_data, Tra_label, batch_size=bz,
+                    epochs=config.Epoch, verbose=2, shuffle=True,
+                    validation_data=(Val_data, Val_label))
+
+loss = np.array(history.history['loss'])
+val_acc = np.array(history.history['val_accuracy'])
+
 #%%
-pred = model.predict(dvalid)
-# pred = model.predict(Val_data)
-Gs = _RMSE(pred, Val_label)
-print("RMSE >> ", Gs)
-#%%
-pred_tes = model.predict(dtest)
-# pred_tes = model.predict(Tes_data)
-id_list = np.arange(0, len(pred_tes), 1).astype(str)
-D = np.vstack([id_list, pred]).T
-df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
-# df.to_csv('Lasso_IDxMonth.csv', index=False)
-df.to_csv('XG_IDxMonth2.csv', index=False)
+# pred_tes = model.predict(dtest)
+# id_list = np.arange(0, len(pred_tes), 1).astype(str)
+# D = np.vstack([id_list, pred]).T
+# df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
+# df.to_csv('XG_IDxMonth2.csv', index=False)
 tEnd = time.time()
 print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
