@@ -31,15 +31,15 @@ Data_tes = pd.read_csv(os.path.join(path, Ftes), low_memory=False)
 Data_tra = np.load('tes_Z.npy')
 ID = np.array(Data_tes)[:, 1:3]
 
-Tra_data = nF[:, 28:31]
+Tra_data = nF[:, :31]
 Tra_data = _Nor(np.hstack((ID, Tra_data))[:,np.newaxis,:])
 Tra_label = nF[:, 31]
 
-Val_data = nF[:, 29:32]
+Val_data = nF[:, 1:32]
 Val_data = _Nor(np.hstack((ID, Val_data))[:,np.newaxis,:])
 Val_label = nF[:, 32]
 
-Tes_data = nF[:, 30:33]
+Tes_data = nF[:, 2:]
 Tes_data = _Nor(np.hstack((ID, Tes_data))[:,np.newaxis,:])
 
 # #%%
