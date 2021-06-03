@@ -36,7 +36,7 @@ for ns in range(len(data_tes)):
         else:
             tes_Z[ns, id_m] = np.sum(A[:, -1])   
             
-np.save('tes_Z.npy', tes_Z)
+# np.save('tes_Z.npy', tes_Z)
 np.save('ID.npy', IDD)
 '''
 id_m = 0
