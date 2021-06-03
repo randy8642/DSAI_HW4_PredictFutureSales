@@ -2,10 +2,12 @@ import numpy as np
 import sklearn
 import math
 import os
-from sklearn import linear_model
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import tensorflow.keras as keras
 import pandas as pd
-from xgboost import XGBRegressor
 import time
+import model_tf
+import config
 tStart = time.time()
 
 def _RMSE(pred, real):
@@ -43,32 +45,25 @@ Tes_data = np.hstack((ID, Tes_data))
 
 
 #%%
-model=XGBRegressor(
-    max_depth = 9,
-    n_estimators = 500,
-    learning_rate = 0.1,
-    subsample = 0.7,
-    reg_alpha=0.1,
-    reg_lambda=0.1,
-    colsample_bytree = 0.7)
+bz = config.batch
+model = model_tf.m04(128)
+optim_m = keras.optimizers.Adam(learning_rate=config.lr)
+model.compile(optimizer=optim_m, 
+              loss=keras.losses.MeanSquaredError())
+history = model.fit(Tra_data, Tra_label, batch_size=bz,
+                    epochs=config.Epoch, verbose=1, shuffle=True,
+                    validation_data=(Val_data, Val_label))
 
-model.fit(
-    Tra_data,
-    Tra_label,
-    eval_metric='rmse',
-    eval_set=[(Tra_data, Tra_label), (Val_data, Val_label)], 
-    verbose=True, 
-    early_stopping_rounds = 10)
+loss = np.array(history.history['loss'])
 
 
 #%%
 pred_tes = model.predict(Tes_data)
-
+pred_tes = np.reshape(pred_tes, (len(pred_tes)))
 id_list = np.arange(0, len(pred_tes), 1).astype(str)
 D = np.vstack([id_list, pred_tes]).T
 df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
-# df.to_csv('Lasso_IDxMonth.csv', index=False)
-df.to_csv('XG_IDxMonth_Proc.csv', index=False)
+df.to_csv('TF_IDxMonth_Pro.csv', index=False)
 tEnd = time.time()
 print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
 
