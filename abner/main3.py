@@ -4,6 +4,7 @@ import math
 import os
 from sklearn import linear_model
 import pandas as pd
+from xgboost import XGBRegressor
 import time
 tStart = time.time()
 
@@ -13,25 +14,22 @@ def _RMSE(pred, real):
     return rmse
 
 def _Nor(x):
-  mu = np.mean(x)
-  std = np.std(x)
-  nor = (x-mu)/std
+  x_min = np.min(x)
+  x_max = np.max(x)
+  nor = (x - x_min)/(x_max - x_min)
   return nor
 
 def _NorID(ID):
-  mu = np.mean(ID, axis=0)[np.newaxis,:]
-  std = np.std(ID, axis=0)[np.newaxis,:]
-  nor = (ID-mu)/std
+  ID_min = np.min(ID, axis=0)[np.newaxis,:]
+  ID_max = np.max(ID, axis=0)[np.newaxis,:]
+  nor = (ID - ID_min)/(ID_max - ID_min)
   return nor
   
 nF = np.load('tes_Z.npy')
+nD = np.load('ID.npy')
 
-path = '../data'
-Ftes = 'test.csv'
-Data_tes = pd.read_csv(os.path.join(path, Ftes), low_memory=False)
-Data_tra = np.load('tes_Z.npy')
-ID = _NorID(np.array(Data_tes)[:, 1:3])
-
+#%%
+ID = _NorID(nD)
 Tra_data = _Nor(nF[:, :31])
 Tra_data = np.hstack((ID, Tra_data))
 Tra_label = nF[:, 31]
@@ -43,21 +41,35 @@ Val_label = nF[:, 32]
 Tes_data = _Nor(nF[:, 2:])
 Tes_data = np.hstack((ID, Tes_data))
 
-model = linear_model.LassoCV()
-model.fit(Tra_data, Tra_label)
+
 #%%
-pred = model.predict(Val_data)
-Gs = _RMSE(pred, Val_label)
-print("RMSE >> ", Gs)
-'''
+model=XGBRegressor(
+    max_depth = 9,
+    n_estimators = 500,
+    learning_rate = 0.1,
+    subsample = 0.7,
+    reg_alpha=0.1,
+    reg_lambda=0.1,
+    colsample_bytree = 0.7)
+
+model.fit(
+    Tra_data,
+    Tra_label,
+    eval_metric='rmse',
+    eval_set=[(Tra_data, Tra_label), (Val_data, Val_label)], 
+    verbose=True, 
+    early_stopping_rounds = 10)
+
+
 #%%
-# pred_tes = model.predict(dtest)
 pred_tes = model.predict(Tes_data)
+
 id_list = np.arange(0, len(pred_tes), 1).astype(str)
 D = np.vstack([id_list, pred_tes]).T
 df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
 # df.to_csv('Lasso_IDxMonth.csv', index=False)
-df.to_csv('XG_IDxMonth.csv', index=False)
+df.to_csv('XG_IDxMonth_Proc.csv', index=False)
 tEnd = time.time()
 print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
-'''
+
+
