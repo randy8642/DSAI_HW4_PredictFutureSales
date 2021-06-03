@@ -33,15 +33,15 @@ nD = np.load('ID.npy')
 #%%
 ID = _NorID(nD)
 Tra_data = _Nor(nF[:, :31])
-Tra_data = np.hstack((ID, Tra_data))
+Tra_data = np.hstack((ID, Tra_data))[:,np.newaxis,:]
 Tra_label = nF[:, 31]
 
 Val_data = _Nor(nF[:, 1:32])
-Val_data = np.hstack((ID, Val_data))
+Val_data = np.hstack((ID, Val_data))[:,np.newaxis,:]
 Val_label = nF[:, 32]
 
 Tes_data = _Nor(nF[:, 2:])
-Tes_data = np.hstack((ID, Tes_data))
+Tes_data = np.hstack((ID, Tes_data))[:,np.newaxis,:]
 
 
 #%%
