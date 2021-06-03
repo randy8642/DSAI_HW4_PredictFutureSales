@@ -347,7 +347,7 @@ X_test = data[data.date_block_num == 34].drop(['item_cnt_month'], axis=1)
 Y_train = Y_train.clip(0, 20)
 Y_valid = Y_valid.clip(0, 20)
 
-
+'''
 #%%
 model=XGBRegressor(
     max_depth = 9,
@@ -367,6 +367,6 @@ model.fit(
     early_stopping_rounds = 10)
 plot_importance(model)
 plt.show()
-
+'''
 
 
