@@ -8,6 +8,7 @@ tensorflow = "*"
 matplotlib = "*"
 pandas = "*"
 numpy = "*"
+tables = "*"
 
 [dev-packages]
 autopep8 = "*"
