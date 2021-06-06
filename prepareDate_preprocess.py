@@ -278,8 +278,6 @@ def addLag(df: pd.DataFrame, col: str, lags: list):
         shifted['date_block_num'] = shifted['date_block_num'] + i
         df = pd.merge(df, shifted, on=[
                       'date_block_num', 'shop_id', 'item_id'], how='left')
-    
-    
 
     return df
 
@@ -329,7 +327,8 @@ df_total = addMonthAvgCnt(df_total)
 df_total = addMonthItemAvgCnt(df_total)
 df_total = addMonthShopAvgCnt(df_total)
 
-df_total = addLag(df_total, 'item_cnt_month', [1, 2, 3])
+df_total = addLag(df_total, 'item_cnt_month', [
+                  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 df_total = addLag(df_total, 'date_avg_item_cnt', [1])
 df_total = addLag(df_total, 'date_item_avg_item_cnt', [1, 2, 3])
 df_total = addLag(df_total, 'date_shop_avg_item_cnt', [1, 2, 3])
@@ -340,9 +339,12 @@ print(f'{time.time() - start_time}\tadding prices...')
 df_total = addAvgPrice(df_total, df_train)
 df_total = addMonthAvgPrice(df_total, df_train)
 df_total = priceTrend(df_total)
-df_total.drop(['date_item_avg_item_price', 'item_avg_item_price'], axis=1, inplace=True)
-df_total.drop([f'date_item_avg_item_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
-df_total.drop([f'delta_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
+df_total.drop(['date_item_avg_item_price',
+              'item_avg_item_price'], axis=1, inplace=True)
+df_total.drop([f'date_item_avg_item_price_lag_{i}' for i in [
+              1, 2, 3]], axis=1, inplace=True)
+df_total.drop([f'delta_price_lag_{i}' for i in [
+              1, 2, 3]], axis=1, inplace=True)
 
 print(f'{time.time() - start_time}\tsplit dates...')
 df_total = splitDate(df_total)

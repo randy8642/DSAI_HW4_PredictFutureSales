@@ -42,12 +42,6 @@ def createInput(df: pd.DataFrame):
     del feature
 
     feature = [np.expand_dims(
-        df[f'item_cnt_month_lag_{c+1}'], axis=1) for c in range(3)]
-    feature = np.concatenate(feature, axis=1)
-    feature = np.expand_dims(feature, axis=2)
-    time_feature.append(feature)
-
-    feature = [np.expand_dims(
         df[f'date_item_avg_item_cnt_lag_{c+1}'], axis=1) for c in range(3)]
     feature = np.concatenate(feature, axis=1)
     feature = np.expand_dims(feature, axis=2)
@@ -61,7 +55,17 @@ def createInput(df: pd.DataFrame):
 
     time_feature = np.concatenate(time_feature, axis=-1)
 
-    return (emb_features, other_feature, time_feature)
+    #
+    
+    del feature
+
+    feature = [np.expand_dims(
+        df[f'item_cnt_month_lag_{c+1}'], axis=1) for c in range(12)]
+    feature = np.concatenate(feature, axis=1)
+    feature = np.expand_dims(feature, axis=2)
+
+
+    return (emb_features, other_feature, time_feature, feature)
 
 
 def createLabel(df: pd.DataFrame):
@@ -75,5 +79,5 @@ test_x = createInput(test_df)
 
 
 np.savez_compressed('inputs.npz', train_x_emb=train_x[0], train_x_other=train_x[1],
-                    train_x_time=train_x[2], train_y=train_y,  test_x_emb=train_x[0], 
-                    test_x_other=train_x[1], test_x_time=train_x[2])
+                    train_x_time=train_x[2], train_x_cnt=train_x[3], train_y=train_y,  test_x_emb=test_x[0], 
+                    test_x_other=test_x[1], test_x_time=test_x[2], test_x_cnt=test_x[3])
