@@ -6,3 +6,5 @@ __pycache__/
 .vscode
 
 data
+abner/inputs.npz
+abner/preprocessData.h5
