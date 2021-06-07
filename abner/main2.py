@@ -59,7 +59,7 @@ history = model.fit(Tra_data, Tra_label, batch_size=bz,
                     validation_data=(Val_data, Val_label))
 
 loss = np.array(history.history['loss'])
-model.save('Fm04')
+model.save_weights('Fm04_w.h5')
 
 #%%
 pred_tes = model.predict(Tes_data)
