@@ -28,8 +28,8 @@ tes_other = _2D(x['test_x_other'])
 tes_time = _2D(x['test_x_time'])
 tes_cnt = _2D(x['test_x_cnt'])
 
-train_x = np.hstack([tra_emb, tra_other, tra_time, tra_cnt])
-test_x = np.hstack([tes_emb, tes_other, tes_time, tes_cnt])
+train_x = np.hstack([tra_emb, tra_other, tra_time, tra_cnt])[:,np.newaxis,:]
+test_x = np.hstack([tes_emb, tes_other, tes_time, tes_cnt])[:,np.newaxis,:]
 
 
 bz = config.batch
