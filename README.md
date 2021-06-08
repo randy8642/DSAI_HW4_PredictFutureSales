@@ -22,7 +22,7 @@ NCKU DSAI course homework
 `cd /d [path/to/this/project]` 
 
 2. 安裝所需套件\
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 3. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)
 `python main.py`
