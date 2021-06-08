@@ -26,6 +26,7 @@ X_test = _NorID(x['X_test'])
 
 #%%
 X_train = X_train[:,np.newaxis,:]
+X_valid = X_valid[:,np.newaxis,:]
 X_test = X_test[:,np.newaxis,:]
 
 
