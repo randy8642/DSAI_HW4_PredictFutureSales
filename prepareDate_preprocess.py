@@ -72,6 +72,9 @@ def category_preprocess(df: pd.DataFrame):
     df['cate_subtype'] = df['item_category_name'].apply(
         lambda x: re.split(' - ', x)[-1]).astype(str)
 
+    #
+    df.loc[ (df['cate_type'] == 'Игровые')| (df['cate_type'] == 'Аксессуары'), 'cate_type' ] = 'Игры'
+
     # 合併過小的類別
     category = []
     for cat in df['cate_type'].unique():
@@ -177,8 +180,7 @@ def createTotalDataframe():
     cols = ["date_block_num", "shop_id", "item_id"]
     for i in range(34):
         sales = df_train[df_train['date_block_num'] == i]
-        matrix.append(np.array(list(product(
-            [i], sales['shop_id'].unique(), sales['item_id'].unique())), dtype=np.int))
+        matrix.append(np.array(list(product([i], sales['shop_id'].unique(), sales['item_id'].unique())), dtype=np.int))
 
     matrix = pd.DataFrame(np.vstack(matrix), columns=cols)
     matrix["date_block_num"] = matrix["date_block_num"].astype(np.int8)
@@ -392,12 +394,22 @@ def createTest(df: pd.DataFrame, df_src: pd.DataFrame):
     cols = ["date_block_num", "shop_id", "item_id"]
 
     df_src['date_block_num'] = 34
-    df = pd.concat([df, df_src.drop(["ID"], axis=1)],
-                   ignore_index=True, sort=False, keys=cols)
+    df = pd.concat([df, df_src.drop(["ID"], axis=1)],  ignore_index=True, sort=False, keys=cols)
     df.fillna(0, inplace=True)
 
     return df
 
+
+def addFirstSale(df:pd.DataFrame):
+    df["item_shop_first_sale"] = df["date_block_num"] - df.groupby(["item_id","shop_id"])["date_block_num"].transform('min')
+    df["item_first_sale"] = df["date_block_num"] - df.groupby(["item_id"])["date_block_num"].transform('min')
+
+    return df
+
+def delnanLag(df:pd.DataFrame):
+    df = df[df["date_block_num"] > 3]
+
+    return df
 
 #############################################################################################
 df_train = pd.read_csv('./data/sales_train.csv')
@@ -424,6 +436,7 @@ df_total = createTest(df_total, df_test)
 df_total = combineDf(df_total, df_shop, ['shop_id'])
 df_total = combineDf(df_total, df_items, ['item_id'])
 df_total = combineDf(df_total, df_cate, ['item_category_id'])
+
 
 # 增加銷售量feature
 df_total = addMonthCnt(df_total, df_train)
@@ -456,6 +469,12 @@ df_total = revenue(df_total, df_train)
 
 # 拆解月份
 df_total = splitDate(df_total)
+
+#
+df_total = addFirstSale(df_total)
+
+#
+df_total = delnanLag(df_total)
 
 df_total.fillna(0, inplace=True)
 
