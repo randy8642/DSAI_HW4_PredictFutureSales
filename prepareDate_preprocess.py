@@ -7,7 +7,6 @@ import numpy as np
 from itertools import product
 import copy
 import re
-import time
 
 
 def train_preprocess(df: pd.DataFrame):
@@ -20,6 +19,9 @@ def train_preprocess(df: pd.DataFrame):
     same_shopId = [[0, 57], [1, 58], [10, 11]]
     for pair in same_shopId:
         df.loc[df['shop_id'] == pair[0], 'shop_id'] = pair[1]
+
+    # 加上銷售額
+    df['revenue'] = df['item_price'] * df['item_cnt_day']
 
     return df
 
@@ -36,11 +38,11 @@ def test_preprocess(df: pd.DataFrame):
 def shop_preprocess(df: pd.DataFrame):
 
     # 切割商店名稱 => 所在地 & 類型
-    df["city"] = df['shop_name'].str.split(
+    df['city'] = df['shop_name'].str.split(
         ' ').map(lambda x: ' '.join(x[0:-2]))
-    df["category"] = df['shop_name'].str.split(' ').map(lambda x: x[-2])
+    df['category'] = df['shop_name'].str.split(' ').map(lambda x: x[-2])
 
-    df["city"] = df["city"].apply(lambda x: re.sub('[!]', '', x))
+    df['city'] = df['city'].apply(lambda x: re.sub('[!]', '', x))
 
     # 合併過小的類別
     category = []
@@ -75,6 +77,7 @@ def category_preprocess(df: pd.DataFrame):
     for cat in df['cate_type'].unique():
         if len(df[df['cate_type'] == cat]) >= 5:
             category.append(cat)
+
     df['cate_type'] = df['cate_type'].apply(
         lambda x: x if (x in category) else 'etc')
 
@@ -93,44 +96,65 @@ def items_preprocess(df: pd.DataFrame):
 
     # 切割商品名稱 => 類別1 & 類別2
     def splitNameType1(x):
-        result = re.findall(r'\(.*\)', x)
-        for index in range(len(result)):
-            result[index] = re.sub(',', '', result[index][1:-1])
+        results = re.findall(r'\(.*', x)
 
-        if len(result) == 0:
-            return x
+        if len(results) > 0:
+            result = re.sub('[^A-Za-z0-9А-Яа-я]+', ' ', results[0][1:]).lower()
+        else:
+            result = np.nan
 
-        return ' '.join(result)
+        return result
 
     def splitNameType2(x):
-        result = re.findall(r'\[.*\]', x)
-        for index in range(len(result)):
-            result[index] = re.sub(',', '', result[index][1:-1])
+        results = re.findall(r'\[.*', x)
 
-        if len(result) == 0:
-            return x
+        if len(results) > 0:
+            result = re.sub('[^A-Za-z0-9А-Яа-я]+', ' ', results[0][1:]).lower()
+        else:
+            result = np.nan
 
-        return ' '.join(result)
+        return result
+
+    def name_correction(x: str):
+        x = x.lower()
+        x = re.split(r'[\(\[]', x)[0]
+        x = re.sub('[^A-Za-z0-9А-Яа-я]+', ' ', x)
+        x = re.sub('  ', ' ', x)
+        x = x.strip()
+
+        return x
 
     df['item_type_1'] = df['item_name'].apply(lambda x: splitNameType1(x))
     df['item_type_2'] = df['item_name'].apply(lambda x: splitNameType2(x))
 
-    # 整理名稱 並 轉換成小寫字母
-    df['item_type_1'] = df['item_type_1'].apply(
-        lambda x: re.sub('[^A-Za-z0-9А-Яа-я]+', ' ', x).lower())
+    df = df.fillna('0')
+
+    # 修正商品名稱
+    df["item_name"] = df["item_name"].apply(lambda x: name_correction(x))
+
+    # 切割類別
+    df["type"] = df['item_type_2'].apply(lambda x: x[0:8] if x.split(" ")[
+                                         0] == "xbox" else x.split(" ")[0])
+
+    # 整理
+    df.loc[(df['type'] == 'x360') | (df['type'] == 'xbox360')
+           | (df['type'] == 'xbox 360'), 'type'] = 'xbox 360'
+    df.loc[df['type'] == '', 'type'] = 'mac'
+    df['type'] = df['type'].apply(lambda x: x.replace(' ', ''))
+    df.loc[(df['type'] == 'pc') | (df['type'] == 'pс')
+           | (df['type'] == 'pc'), 'type'] = 'pc'
+    df.loc[df['type'] == 'рs3', 'type'] = 'ps3'
+
+    # 整合較小的類別
+    group_sum = df.groupby(['type']).agg({'item_id': 'count'})
+    group_sum = group_sum.reset_index()
+    drop_cols = []
+    for cat in group_sum['type'].unique():
+        if group_sum.loc[(group_sum['type'] == cat), 'item_id'].values[0] < 40:
+            drop_cols.append(cat)
     df['item_type_2'] = df['item_type_2'].apply(
-        lambda x: re.sub('[^A-Za-z0-9А-Яа-я]+', ' ', x).lower())
-
-    # 合併過小的類別
-    def cleanSmalltypes(_df: pd.DataFrame, col: str):
-        item_type = []
-        for item in _df[col].unique():
-            if len(_df[_df[col] == item]) >= 40:
-                item_type.append(item)
-        return _df[col].apply(lambda x: x if (x in item_type) else 'other')
-
-    df['item_type_1'] = cleanSmalltypes(df, 'item_type_1')
-    df['item_type_2'] = cleanSmalltypes(df, 'item_type_2')
+        lambda x: 'other' if (x in drop_cols) else x)
+    df = df.drop(['type'], axis=1)
 
     # 標籤(文字) => 索引(類別編號)
     _, df['item_type_1_id'] = np.unique(df['item_type_1'], return_inverse=True)
@@ -223,6 +247,53 @@ def addMonthShopAvgCnt(df: pd.DataFrame):
     return df
 
 
+def addMonthShopItemAvgCnt(df: pd.DataFrame):
+    group = df.groupby(["date_block_num", "shop_id", "item_id"]).agg(
+        {"item_cnt_month": ["mean"]})
+    group.columns = ["date_shop_item_avg_item_cnt"]
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=["date_block_num",
+                  "shop_id", "item_id"], how="left")
+
+    return df
+
+
+def addMonthShopsubTypeAvgCnt(df: pd.DataFrame):
+    group = df.groupby(['date_block_num', 'shop_id', 'cate_subtype_id']).agg(
+        {'item_cnt_month': ['mean']})
+    group.columns = ['date_shop_subtype_avg_item_cnt']
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=['date_block_num',
+                  'shop_id', 'cate_subtype_id'], how='left')
+
+    return df
+
+
+def addMonthCityAvgCnt(df: pd.DataFrame):
+    group = df.groupby(['date_block_num', 'shop_city_id']
+                       ).agg({'item_cnt_month': ['mean']})
+    group.columns = ['date_city_avg_item_cnt']
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=['date_block_num', "shop_city_id"], how='left')
+
+    return df
+
+
+def addMonthCityItemAvgCnt(df: pd.DataFrame):
+    group = df.groupby(['date_block_num', 'item_id', 'shop_city_id']).agg(
+        {'item_cnt_month': ['mean']})
+    group.columns = ['date_item_city_avg_item_cnt']
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=['date_block_num',
+                  'item_id', 'shop_city_id'], how='left')
+
+    return df
+
+
 def addAvgPrice(df: pd.DataFrame, df_src: pd.DataFrame):
     group = df_src.groupby(["item_id"]).agg({"item_price": ["mean"]})
     group.columns = ["item_avg_item_price"]
@@ -262,12 +333,47 @@ def priceTrend(df: pd.DataFrame):
     df["delta_price_lag"] = df.apply(select_trends, axis=1)
     df["delta_price_lag"].fillna(0, inplace=True)
 
+    df.drop(['date_item_avg_item_price', 'item_avg_item_price'], axis=1, inplace=True)
+    df.drop([f'date_item_avg_item_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
+    df.drop([f'delta_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
+
+    return df
+
+
+def revenue(df: pd.DataFrame, df_src: pd.DataFrame):
+    #
+    group = df_src.groupby(['date_block_num', 'shop_id']
+                           ).agg({'revenue': ['sum']})
+    group.columns = ['date_shop_revenue']
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=["date_block_num", "shop_id"], how="left")
+
+    #
+    group = group.groupby(["shop_id"]).agg({"date_block_num": ["mean"]})
+    group.columns = ["shop_avg_revenue"]
+    group.reset_index(inplace=True)
+
+    df = pd.merge(df, group, on=['shop_id'], how="left")
+
+    #
+    df['shop_avg_revenue'] = df['shop_avg_revenue'].astype(np.float32)
+    df['delta_revenue'] = (df['date_shop_revenue'] -
+                           df['shop_avg_revenue']) / df['shop_avg_revenue']
+    df['delta_revenue'] = df['delta_revenue'].astype(np.float32)
+
+    #
+    df = addLag(df, 'delta_revenue', [1])
+    df.drop(['date_shop_revenue', 'shop_avg_revenue',
+            'delta_revenue'], axis=1, inplace=True)
+
     return df
 
 
 def addLag(df: pd.DataFrame, col: str, lags: list):
 
-    assert sum([type(x) == int for x in lags]) == len(lags), '非所有lags為int'
+    assert sum([type(x) == int for x in lags]) == len(
+        lags), '非所有lags為type(int)'
 
     tmp = df[["date_block_num", "shop_id", "item_id", col]]
 
@@ -293,8 +399,6 @@ def createTest(df: pd.DataFrame, df_src: pd.DataFrame):
     return df
 
 
-start_time = time.time()
-print(f'{time.time() - start_time}\tread files...')
 #############################################################################################
 df_train = pd.read_csv('./data/sales_train.csv')
 df_items = pd.read_csv('./data/items.csv')
@@ -302,7 +406,7 @@ df_cate = pd.read_csv('./data/item_categories.csv')
 df_test = pd.read_csv('./data/test.csv')
 df_shop = pd.read_csv('./data/shops.csv')
 
-print(f'{time.time() - start_time}\tpreprocessing...')
+
 #############################################################################################
 df_train = train_preprocess(df_train)
 df_test = test_preprocess(df_test)
@@ -310,46 +414,51 @@ df_shop = shop_preprocess(df_shop)
 df_cate = category_preprocess(df_cate)
 df_items = items_preprocess(df_items)
 
-print(f'{time.time() - start_time}\tcreating fullDataFrame...')
+
 #############################################################################################
 df_total = createTotalDataframe()
 
 df_total = createTest(df_total, df_test)
 
-print(f'{time.time() - start_time}\tcombining...')
+# 合併
 df_total = combineDf(df_total, df_shop, ['shop_id'])
 df_total = combineDf(df_total, df_items, ['item_id'])
 df_total = combineDf(df_total, df_cate, ['item_category_id'])
 
-print(f'{time.time() - start_time}\tadding counts...')
+# 增加銷售量feature
 df_total = addMonthCnt(df_total, df_train)
 df_total = addMonthAvgCnt(df_total)
 df_total = addMonthItemAvgCnt(df_total)
 df_total = addMonthShopAvgCnt(df_total)
+df_total = addMonthShopItemAvgCnt(df_total)
+df_total = addMonthShopsubTypeAvgCnt(df_total)
+df_total = addMonthCityAvgCnt(df_total)
+df_total = addMonthCityItemAvgCnt(df_total)
 
-df_total = addLag(df_total, 'item_cnt_month', [
-                  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+df_total = addLag(df_total, 'item_cnt_month', [1, 2, 3])
 df_total = addLag(df_total, 'date_avg_item_cnt', [1])
 df_total = addLag(df_total, 'date_item_avg_item_cnt', [1, 2, 3])
 df_total = addLag(df_total, 'date_shop_avg_item_cnt', [1, 2, 3])
-df_total.drop(['date_avg_item_cnt', 'date_item_avg_item_cnt',
-              'date_shop_avg_item_cnt'], axis=1, inplace=True)
+df_total = addLag(df_total, 'date_shop_item_avg_item_cnt', [1, 2, 3])
+df_total = addLag(df_total, 'date_shop_subtype_avg_item_cnt', [1])
+df_total = addLag(df_total, 'date_city_avg_item_cnt', [1])
+df_total = addLag(df_total, 'date_item_city_avg_item_cnt', [1])
 
-print(f'{time.time() - start_time}\tadding prices...')
+df_total.drop(['date_avg_item_cnt', 'date_item_avg_item_cnt', 'date_shop_avg_item_cnt',
+               'date_shop_item_avg_item_cnt', 'date_shop_subtype_avg_item_cnt', 'date_city_avg_item_cnt',
+               'date_item_city_avg_item_cnt'], axis=1, inplace=True)
+
+# 增加銷售額features
 df_total = addAvgPrice(df_total, df_train)
 df_total = addMonthAvgPrice(df_total, df_train)
 df_total = priceTrend(df_total)
-df_total.drop(['date_item_avg_item_price',
-              'item_avg_item_price'], axis=1, inplace=True)
-df_total.drop([f'date_item_avg_item_price_lag_{i}' for i in [
-              1, 2, 3]], axis=1, inplace=True)
-df_total.drop([f'delta_price_lag_{i}' for i in [
-              1, 2, 3]], axis=1, inplace=True)
+df_total = revenue(df_total, df_train)
 
-print(f'{time.time() - start_time}\tsplit dates...')
+# 拆解月份
 df_total = splitDate(df_total)
 
 df_total.fillna(0, inplace=True)
-print(f'{time.time() - start_time}\tsaving...')
+
+# 儲存
 save_dataframe(df_total)
-print(df_total)
+
