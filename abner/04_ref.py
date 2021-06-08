@@ -18,11 +18,11 @@ def _NorID(ID):
 x = np.load('inputs_ref.npz')
 
 # def _inputs(x):
-X_train = _NorID(x['X_train'])
+X_train = (x['X_train'])
 Y_train = (x['Y_train'])
-X_valid = _NorID(x['X_valid'])
+X_valid = (x['X_valid'])
 Y_valid = (x['Y_valid'])
-X_test = _NorID(x['X_test'])
+X_test = (x['X_test'])
 
 #%%
 X_train = X_train[:,np.newaxis,:]
@@ -44,4 +44,4 @@ pred_tes = np.reshape(pred_tes, (len(pred_tes)))
 id_list = np.arange(0, len(pred_tes), 1).astype(str)
 D = np.vstack([id_list, pred_tes]).T
 df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
-df.to_csv('TF_RY_Ref.csv', index=False)
+df.to_csv('TF_RY_Ref_NNOR.csv', index=False)

@@ -26,7 +26,7 @@ for i in range(len(X_test)):
     B = A[A[:,2]==item_idx]
     if len(B)!=0:
         tra.append(B)
-        
+#%%        
 tra = np.vstack(tra)
 X = tra[:, :-1]
 Y = tra[:, -1]

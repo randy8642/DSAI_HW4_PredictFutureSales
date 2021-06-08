@@ -12,19 +12,26 @@ def _2D(x):
     y = np.reshape(x, (leng, -1))
     return y
 
-# def _inputs(x):
-train_x = (x['train_x_emb'])
-# tra_other = _2D(x['train_x_other'])
-# tra_time = _2D(x['train_x_time'])
-# tra_cnt = _2D(x['train_x_cnt'])
-train_y = (x['train_y'])
-test_x = (x['test_x_emb'])
-# tes_other = _2D(x['test_x_other'])
-# tes_time = _2D(x['test_x_time'])
-# tes_cnt = _2D(x['test_x_cnt'])
+def _NorID(ID):
+  mu = np.mean(ID, axis=0)[np.newaxis,:]
+  std = np.std(ID, axis=0)[np.newaxis,:]
+  nor = (ID-mu)/std
+  return nor    
 
-# train_x = np.hstack([tra_emb, tra_other, tra_time, tra_cnt])
-# test_x = np.hstack([tes_emb, tes_other, tes_time, tes_cnt])
+# def _inputs(x):
+tra_emb = _2D(x['train_x_emb'])
+tra_other = _2D(x['train_x_other'])
+tra_time = _2D(x['train_x_time'])
+tra_cnt = _2D(x['train_x_cnt'])
+train_y = _2D(x['train_y'])
+tes_emb = _2D(x['test_x_emb'])
+tes_other = _2D(x['test_x_other'])
+tes_time = _2D(x['test_x_time'])
+tes_cnt = _2D(x['test_x_cnt'])
+
+
+train_x = _NorID(np.hstack([tra_emb, tra_other, tra_time, tra_cnt]))
+test_x = _NorID(np.hstack([tes_emb, tes_other, tes_time, tes_cnt]))
 
 
 model=XGBRegressor(
@@ -48,4 +55,4 @@ pred_tes = model.predict(test_x)
 id_list = np.arange(0, len(pred_tes), 1).astype(str)
 D = np.vstack([id_list, pred_tes]).T
 df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
-df.to_csv('XG_RY_emb.csv', index=False)
+df.to_csv('XG_RY_NOR.csv', index=False)
