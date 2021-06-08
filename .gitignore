@@ -8,3 +8,4 @@ __pycache__/
 data
 abner/inputs.npz
 abner/preprocessData.h5
+abner/inputs_ref.npz

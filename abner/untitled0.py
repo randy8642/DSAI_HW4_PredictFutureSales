@@ -347,6 +347,10 @@ X_test = data[data.date_block_num == 34].drop(['item_cnt_month'], axis=1)
 Y_train = Y_train.clip(0, 20)
 Y_valid = Y_valid.clip(0, 20)
 
+
+np.savez_compressed('inputs_ref.npz', X_train=X_train, Y_train=Y_train,
+                    X_valid=X_valid, Y_valid=Y_valid, X_test=X_test)
+
 '''
 #%%
 model=XGBRegressor(
