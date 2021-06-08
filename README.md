@@ -20,3 +20,9 @@ NCKU DSAI course homework
 ### 使用方式
 1. 進入專案資料夾\
 `cd /d [path/to/this/project]` 
+
+2. 安裝所需套件\
+`pip install requirements.txt`
+
+3. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)
+`python main.py`
