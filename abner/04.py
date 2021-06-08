@@ -12,6 +12,12 @@ x = np.load('inputs.npz')
 tra_leng = 10913804
 tes_leng = 214200
 
+def _NorID(ID):
+  mu = np.mean(ID, axis=0)[np.newaxis,:]
+  std = np.std(ID, axis=0)[np.newaxis,:]
+  nor = (ID-mu)/std
+  return nor
+
 def _2D(x):
     leng = len(x)
     y = np.reshape(x, (leng, -1))
@@ -28,8 +34,12 @@ tes_other = _2D(x['test_x_other'])
 tes_time = _2D(x['test_x_time'])
 tes_cnt = _2D(x['test_x_cnt'])
 
-train_x = np.hstack([tra_emb, tra_other, tra_time, tra_cnt])[:,np.newaxis,:]
-test_x = np.hstack([tes_emb, tes_other, tes_time, tes_cnt])[:,np.newaxis,:]
+
+train_x = _NorID(np.hstack([tra_emb, tra_other, tra_time, tra_cnt]))
+test_x = _NorID(np.hstack([tes_emb, tes_other, tes_time, tes_cnt]))
+
+train_x = train_x[:,np.newaxis,:]
+test_x = test_x[:,np.newaxis,:]
 
 
 bz = config.batch
@@ -45,4 +55,4 @@ pred_tes = np.reshape(pred_tes, (len(pred_tes)))
 id_list = np.arange(0, len(pred_tes), 1).astype(str)
 D = np.vstack([id_list, pred_tes]).T
 df = pd.DataFrame(D, columns=["ID", "item_cnt_month"])
-df.to_csv('TF_RY.csv', index=False)
+df.to_csv('TF_RY_NOR.csv', index=False)
