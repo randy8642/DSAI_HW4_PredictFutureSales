@@ -4,7 +4,7 @@ import numpy as np
 import time
 
 tStart = time.time()
-x = np.load('inputs_ref.npz')
+x = np.load('inputs.npz')
 # def _inputs(x):
 X_test = (x['X_test'])
 model_loaded = pickle.load(open('XGmodel', "rb"))
