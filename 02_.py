@@ -8,6 +8,7 @@ from xgboost import plot_importance
 df = pd.read_hdf('preprocessData.h5', key='df', mode='r')
 dlist = ['cate_subtype_id', 'cate_type_id', 'date_shop_avg_item_cnt_lag_1', 'date_shop_avg_item_cnt_lag_2', 'date_shop_avg_item_cnt_lag_3', 'date_shop_item_avg_item_cnt_lag_1', 'date_shop_item_avg_item_cnt_lag_2', 'date_shop_item_avg_item_cnt_lag_3']
 df = df.drop(dlist, axis=1)
+print(df.shape[1])
 
 def _XY(df, test=False):
     D = df.copy()
@@ -30,9 +31,9 @@ X_valid, Y_valid = _XY(valid_df)
 X_test, _ = _XY(test_df, test=True)
 
 model=XGBRegressor(
-    max_depth = 9,
+    max_depth = 15,
     n_estimators = 500,
-    learning_rate = 0.01,
+    learning_rate = 0.1,
     subsample = 0.7,
     reg_alpha=0.1,
     reg_lambda=0.1,
@@ -48,6 +49,8 @@ model.fit(
 
 plot_importance(model)
 plt.show()
+
+pickle.dump(model, open('XGmodel_', "wb"))
 
 # np.savez_compressed('inputs.npz', X_train=X_train, Y_train=Y_train,
 #                     X_valid=X_valid, Y_valid=Y_valid, X_test=X_test)

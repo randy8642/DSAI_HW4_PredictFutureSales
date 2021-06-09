@@ -5,7 +5,7 @@ from xgboost import XGBRegressor
 import time
 
 tStart = time.time()
-x = np.load('inputs.npz')
+x = np.load('inputs_ref.npz')
 
 # def _inputs(x):
 X_train = (x['X_train'])
@@ -31,7 +31,7 @@ model.fit(
     verbose=True, 
     early_stopping_rounds = 10)              
 
-pickle.dump(model, open('XGmodel_', "wb"))
+pickle.dump(model, open('XGmodel', "wb"))
 
 # pred_tes = model.predict(X_test)
 # id_list = np.arange(0, len(pred_tes), 1).astype(str)
