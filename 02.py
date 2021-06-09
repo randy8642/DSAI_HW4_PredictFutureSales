@@ -3,7 +3,6 @@ import numpy as np
 import h5py
 
 
-#%%
 df = pd.read_hdf('preprocessData.h5', key='df', mode='r')
 
 print(df.keys())
@@ -83,5 +82,3 @@ np.savez_compressed('inputs.npz', train_x_emb=train_x[0], train_x_other=train_x[
                     train_x_time=train_x[2], train_x_cnt=train_x[3], train_y=train_y,  test_x_emb=test_x[0], 
                     test_x_other=test_x[1], test_x_time=test_x[2], test_x_cnt=test_x[3])
 '''
-
-
