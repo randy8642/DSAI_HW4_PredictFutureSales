@@ -26,3 +26,6 @@ NCKU DSAI course homework
 
 3. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)\
 `python main.py`
+
+### 最終分數 (RMSE)\
+[Imgur]<https://i.imgur.com/0cpbfdq.png>
