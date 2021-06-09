@@ -28,4 +28,4 @@ NCKU DSAI course homework
 `python main.py`
 
 ### 最終分數 (RMSE)\
-[Imgur]<https://i.imgur.com/0cpbfdq.png>
+![Imgur](https://i.imgur.com/0cpbfdq.png)
