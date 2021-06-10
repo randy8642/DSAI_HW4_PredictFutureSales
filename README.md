@@ -24,11 +24,13 @@ NCKU DSAI course homework
 2. 安裝所需套件\
 `pip install -r requirements.txt`
 
-3. 訓練模型，得到訓練好的模型 (`XGmodel`)\
-  **(亦可直接進行第4步驟)**
+3. 進行資料特徵擷取 **(亦可直接進行第5步驟)**\
+`python Data_preprocess.py`   
+
+4. 訓練模型，得到訓練好的模型 (`XGmodel`)\
 `python main_train.py`
 
-1. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)\
+5. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)\
 `python main.py`
 
 ### 最終分數 (RMSE)

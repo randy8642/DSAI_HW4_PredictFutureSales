@@ -334,6 +334,7 @@ def delnanLag(df:pd.DataFrame):
     return df
 
 #############################################################################################
+sP = './data/1nputs.npz'
 df_train = pd.read_csv('./data/sales_train.csv')
 df_items = pd.read_csv('./data/items.csv')
 df_cate = pd.read_csv('./data/item_categories.csv')
@@ -423,5 +424,5 @@ X_train, Y_train = _XY(train_df)
 X_valid, Y_valid = _XY(valid_df)
 X_test, _ = _XY(test_df, test=True)
 
-np.savez_compressed('inputs.npz', X_train=X_train, Y_train=Y_train,
+np.savez_compressed(sP, X_train=X_train, Y_train=Y_train,
                     X_valid=X_valid, Y_valid=Y_valid, X_test=X_test)

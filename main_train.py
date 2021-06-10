@@ -5,9 +5,7 @@ from xgboost import XGBRegressor
 import time
 
 tStart = time.time()
-x = np.load('inputs_lit.npz')
-
-# def _inputs(x):
+x = np.load('./data/Inputs.npz')
 X_train = (x['X_train'])
 Y_train = (x['Y_train'])
 X_valid = (x['X_valid'])
