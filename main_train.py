@@ -30,3 +30,6 @@ model.fit(
     early_stopping_rounds = 10)              
 
 pickle.dump(model, open('XGmodel', "wb"))
+
+tEnd = time.time()
+print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))

@@ -1,13 +1,10 @@
 import time
-from numpy.core.defchararray import index
 import pandas as pd
 import numpy as np
 from itertools import product
 import copy
 import re
-from sklearn.preprocessing import LabelEncoder
 #LabelEncoder().fit_transform([cate])
-
 
 def train_preprocess(df: pd.DataFrame):
     # 移除離群值
@@ -444,5 +441,9 @@ def main():
     # 儲存
     save_dataframe(df_total)
 
+
 if __name__ == '__main__':
+    tStart = time.time()
     main()
+    tEnd = time.time()
+    print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
