@@ -1,20 +1,18 @@
-#%%
 import numpy as np 
 import pandas as pd 
 import matplotlib.pyplot as plt
-import time
-# import seabon
+import seaborn as sns
+sns.set(style="darkgrid")
 import os
-# from xgboost import XGBRegressor
-# from xgboost import plot_importance
+from xgboost import XGBRegressor
+from xgboost import plot_importance
 
-str_time = time.time()
 #%%load data
-items=pd.read_csv("./data/items.csv")
-shops=pd.read_csv("./data/shops.csv")
-cats=pd.read_csv("./data/item_categories.csv")
-train=pd.read_csv("./data/sales_train.csv")
-test=pd.read_csv("./data/test.csv")
+items=pd.read_csv("../data/items.csv")
+shops=pd.read_csv("../data/shops.csv")
+cats=pd.read_csv("../data/item_categories.csv")
+train=pd.read_csv("../data/sales_train.csv")
+test=pd.read_csv("../data/test.csv")
 
 #%%
 '''
@@ -337,6 +335,7 @@ time.time() - ts
 
 
 
+
 #%%
 data = matrix.copy()
 data[data["date_block_num"]==34].shape
@@ -347,6 +346,10 @@ Y_valid = data[data.date_block_num == 33]['item_cnt_month']
 X_test = data[data.date_block_num == 34].drop(['item_cnt_month'], axis=1)
 Y_train = Y_train.clip(0, 20)
 Y_valid = Y_valid.clip(0, 20)
+
+
+np.savez_compressed('inputs_ref.npz', X_train=X_train, Y_train=Y_train,
+                    X_valid=X_valid, Y_valid=Y_valid, X_test=X_test)
 
 '''
 #%%

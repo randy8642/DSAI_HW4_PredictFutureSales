@@ -9,8 +9,6 @@ import numpy as np
 from itertools import product
 import copy
 import re
-from sklearn.preprocessing import LabelEncoder
-#LabelEncoder().fit_transform([cate])
 
 
 def train_preprocess(df: pd.DataFrame):
@@ -177,12 +175,8 @@ def items_preprocess(df: pd.DataFrame):
 
     return df
 
-
+# 建立訓練/驗證/測試資料集
 def save_dataframe(df: pd.DataFrame):
-    print(df)
-    df.to_csv('preprocessData.csv', index=False, encoding='utf-8')
-
-
     def _XY(df, test=False):
         D = df.copy()
         X = D.drop(['item_cnt_month'], axis=1)
@@ -199,6 +193,10 @@ def save_dataframe(df: pd.DataFrame):
     X_train, Y_train = _XY(train_df)
     X_valid, Y_valid = _XY(valid_df)
     X_test, _ = _XY(test_df, test=True)
+
+    # 移除極端值
+    Y_train = Y_train.clip(0, 20)
+    Y_valid = Y_valid.clip(0, 20)
 
     sP = './data/Inputs.npz'
     np.savez_compressed(sP, X_train=X_train, Y_train=Y_train,
