@@ -24,7 +24,8 @@ NCKU DSAI course homework
 2. 安裝所需套件\
 `pip install -r requirements.txt`
 
-3. 進行資料特徵擷取 **(亦可直接進行第5步驟)**\
+3. 進行資料前處理，得到處理後的資料集 (`./data/Inputs.npz`)\
+   **(亦可直接進行第4步驟)**\
 `python Data_preprocess.py`   
 
 4. 訓練模型，得到訓練好的模型 (`XGmodel`)\
