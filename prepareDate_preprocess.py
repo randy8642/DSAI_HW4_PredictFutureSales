@@ -3,11 +3,14 @@ https://www.kaggle.com/abdalazez/predict-future-sales-2020#Preprocessing
 '''
 
 import time
+from numpy.core.defchararray import index
 import pandas as pd
 import numpy as np
 from itertools import product
 import copy
 import re
+from sklearn.preprocessing import LabelEncoder
+#LabelEncoder().fit_transform([cate])
 
 
 def train_preprocess(df: pd.DataFrame):
@@ -53,10 +56,11 @@ def shop_preprocess(df: pd.DataFrame):
         lambda x: x if (x in category) else 'other')
 
     # 標籤(文字) => 索引(類別編號)
-    _, df['shopcategory_id'] = np.unique(
-        df['category'], return_inverse=True)
-    _, df['shop_city_id'] = np.unique(
-        df['city'], return_inverse=True)
+    # _, df['shopcategory_id'] = np.unique(df['category'], return_inverse=True)
+    # _, df['shop_city_id'] = np.unique(df['city'], return_inverse=True)
+
+    df['shopcategory_id'] = LabelEncoder().fit_transform(df['category'])
+    df['shop_city_id'] = LabelEncoder().fit_transform(df['city'])
 
     # 新df
     df = df[["shop_id", "shopcategory_id", "shop_city_id"]]
@@ -85,9 +89,11 @@ def category_preprocess(df: pd.DataFrame):
         lambda x: x if (x in category) else 'etc')
 
     # 標籤(文字) => 索引(類別編號)
-    _, df['cate_type_id'] = np.unique(df['cate_type'], return_inverse=True)
-    _, df['cate_subtype_id'] = np.unique(
-        df['cate_subtype'], return_inverse=True)
+    # _, df['cate_type_id'] = np.unique(df['cate_type'], return_inverse=True)
+    # _, df['cate_subtype_id'] = np.unique(df['cate_subtype'], return_inverse=True)
+
+    df['cate_type_id'] = LabelEncoder().fit_transform(df['cate_type'])
+    df['cate_subtype_id'] = LabelEncoder().fit_transform(df['cate_subtype'])
 
     # 新df
     df = df[['item_category_id', 'cate_type_id', 'cate_subtype_id']]
@@ -160,8 +166,11 @@ def items_preprocess(df: pd.DataFrame):
     df = df.drop(['type'], axis=1)
 
     # 標籤(文字) => 索引(類別編號)
-    _, df['item_type_1_id'] = np.unique(df['item_type_1'], return_inverse=True)
-    _, df['item_type_2_id'] = np.unique(df['item_type_2'], return_inverse=True)
+    # _, df['item_type_1_id'] = np.unique(df['item_type_1'], return_inverse=True)
+    # _, df['item_type_2_id'] = np.unique(df['item_type_2'], return_inverse=True)
+
+    df['item_type_1_id'] = LabelEncoder().fit_transform(df['item_type_1'])
+    df['item_type_2_id'] = LabelEncoder().fit_transform(df['item_type_2'])
 
     # 新df
     df = df[['item_id', 'item_category_id', 'item_type_1_id', 'item_type_2_id']]
@@ -170,16 +179,39 @@ def items_preprocess(df: pd.DataFrame):
 
 
 def save_dataframe(df: pd.DataFrame):
-    df.to_hdf('preprocessData.h5', key='df', mode='w', complevel=0)
+    print(df)
+    df.to_csv('preprocessData.csv', index=False, encoding='utf-8')
 
 
-def createTotalDataframe():
-    global df_train
+    def _XY(df, test=False):
+        D = df.copy()
+        X = D.drop(['item_cnt_month'], axis=1)
+        if test:
+            Y = 0
+        else:
+            Y = D['item_cnt_month']
+        return X, Y
+
+    train_df = df[df['date_block_num'] < 33]
+    valid_df = df[df['date_block_num'] == 33]
+    test_df = df[df['date_block_num'] == 34]
+
+    X_train, Y_train = _XY(train_df)
+    X_valid, Y_valid = _XY(valid_df)
+    X_test, _ = _XY(test_df, test=True)
+
+    sP = './data/Inputs.npz'
+    np.savez_compressed(sP, X_train=X_train, Y_train=Y_train,
+                        X_valid=X_valid, Y_valid=Y_valid, X_test=X_test)
+
+
+def createTotalDataframe(df_src:pd.DataFrame):
+    
 
     matrix = []
     cols = ["date_block_num", "shop_id", "item_id"]
     for i in range(34):
-        sales = df_train[df_train['date_block_num'] == i]
+        sales = df_src[df_src['date_block_num'] == i]
         matrix.append(np.array(list(product([i], sales['shop_id'].unique(), sales['item_id'].unique())), dtype=np.int))
 
     matrix = pd.DataFrame(np.vstack(matrix), columns=cols)
@@ -281,6 +313,7 @@ def revenue(df: pd.DataFrame, df_src: pd.DataFrame):
     group.reset_index(inplace=True)
 
     df = pd.merge(df, group, on=["date_block_num", "shop_id"], how="left")
+    df['date_shop_revenue'] = df['date_shop_revenue'].astype(np.float32)
 
     #
     group = group.groupby(["shop_id"]).agg({"date_block_num": ["mean"]})
@@ -297,6 +330,7 @@ def revenue(df: pd.DataFrame, df_src: pd.DataFrame):
 
     #
     df = addLag(df, 'delta_revenue', [1])
+    df['delta_revenue_lag_1'] = df['delta_revenue_lag_1'].astype(np.float32)
     df.drop(['date_shop_revenue', 'shop_avg_revenue',
             'delta_revenue'], axis=1, inplace=True)
 
@@ -326,6 +360,9 @@ def createTest(df: pd.DataFrame, df_src: pd.DataFrame):
 
     df_src['date_block_num'] = 34
     df = pd.concat([df, df_src.drop(["ID"], axis=1)],  ignore_index=True, sort=False, keys=cols)
+    df['shop_id'] = df['shop_id'].astype(np.int8)
+    df['item_id'] = df['item_id'].astype(np.int16)
+    df['date_block_num'] = df['date_block_num'].astype(np.int8)
     df.fillna(0, inplace=True)
 
     return df
@@ -362,7 +399,7 @@ def main():
 
 
     #############################################################################################
-    df_total = createTotalDataframe()
+    df_total = createTotalDataframe(df_train)
 
     df_total = createTest(df_total, df_test)
 
@@ -370,15 +407,27 @@ def main():
     df_total = combineDf(df_total, df_shop, ['shop_id'])
     df_total = combineDf(df_total, df_items, ['item_id'])
     df_total = combineDf(df_total, df_cate, ['item_category_id'])
+    df_total['shop_city_id'] = df_total['shop_city_id'].astype(np.int8)
+    df_total['shopcategory_id'] = df_total['shopcategory_id'].astype(np.int8)
+    df_total['item_category_id'] = df_total['item_category_id'].astype(np.int8)
+    df_total['cate_subtype_id'] = df_total['cate_subtype_id'].astype(np.int8)
+    df_total['item_type_2_id'] = df_total['item_type_2_id'].astype(np.int8)
+    df_total['item_type_1_id'] = df_total['item_type_1_id'].astype(np.int16)
+    df_total['cate_type_id'] = df_total['cate_type_id'].astype(np.int8)
 
 
     # 增加銷售量feature
     df_total = addMonthCnt(df_total, df_train)
     df_total = addMonthAvgCnt(df_total)
+    df_total['date_avg_item_cnt'] = df_total['date_avg_item_cnt'].astype(np.float16)
     df_total = addMonthItemAvgCnt(df_total)
+    df_total['date_item_avg_item_cnt'] = df_total['date_item_avg_item_cnt'].astype(np.float16)
     df_total = addMonthShopsubTypeAvgCnt(df_total)
+    df_total['date_shop_subtype_avg_item_cnt'] = df_total['date_shop_subtype_avg_item_cnt'].astype(np.float16)
     df_total = addMonthCityAvgCnt(df_total)
+    df_total['date_city_avg_item_cnt'] = df_total['date_city_avg_item_cnt'].astype(np.float16)
     df_total = addMonthCityItemAvgCnt(df_total)
+    df_total['date_item_city_avg_item_cnt'] = df_total['date_item_city_avg_item_cnt'].astype(np.float16)
 
     df_total = addLag(df_total, 'item_cnt_month', [1, 2, 3])
     df_total = addLag(df_total, 'date_avg_item_cnt', [1])
