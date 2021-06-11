@@ -9,7 +9,7 @@ matplotlib = "*"
 pandas = "*"
 numpy = "*"
 tables = "*"
-sklearn = "*"
+scikit-learn = "*"
 
 [dev-packages]
 autopep8 = "*"

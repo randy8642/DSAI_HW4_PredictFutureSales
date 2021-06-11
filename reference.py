@@ -1,11 +1,14 @@
+#%%
 import numpy as np 
 import pandas as pd 
 import matplotlib.pyplot as plt
+import time
 # import seabon
 import os
 # from xgboost import XGBRegressor
 # from xgboost import plot_importance
 
+str_time = time.time()
 #%%load data
 items=pd.read_csv("./data/items.csv")
 shops=pd.read_csv("./data/shops.csv")
@@ -331,8 +334,7 @@ time.time() - ts
 
 
 
-print(matrix)
-exit()
+
 
 
 #%%

@@ -2,6 +2,7 @@
 https://www.kaggle.com/abdalazez/predict-future-sales-2020#Preprocessing
 '''
 
+import time
 import pandas as pd
 import numpy as np
 from itertools import product
@@ -38,8 +39,7 @@ def test_preprocess(df: pd.DataFrame):
 def shop_preprocess(df: pd.DataFrame):
 
     # 切割商店名稱 => 所在地 & 類型
-    df['city'] = df['shop_name'].str.split(
-        ' ').map(lambda x: ' '.join(x[0:-2]))
+    df['city'] = df['shop_name'].str.split(' ').map(lambda x: ' '.join(x[0:-2]))
     df['category'] = df['shop_name'].str.split(' ').map(lambda x: x[-2])
 
     df['city'] = df['city'].apply(lambda x: re.sub('[!]', '', x))
@@ -50,7 +50,7 @@ def shop_preprocess(df: pd.DataFrame):
         if len(df[df['category'] == cat]) >= 5:
             category.append(cat)
     df['category'] = df['category'].apply(
-        lambda x: x if (x in category) else "other")
+        lambda x: x if (x in category) else 'other')
 
     # 標籤(文字) => 索引(類別編號)
     _, df['shopcategory_id'] = np.unique(
@@ -68,7 +68,7 @@ def category_preprocess(df: pd.DataFrame):
 
     # 切割類別名稱 => 主類別 & 子類別
     df['cate_type'] = df['item_category_name'].apply(
-        lambda x: re.split(' - ', x)[0]).astype(str)
+        lambda x: re.split(' ', x)[0]).astype(str)
     df['cate_subtype'] = df['item_category_name'].apply(
         lambda x: re.split(' - ', x)[-1]).astype(str)
 
@@ -130,7 +130,7 @@ def items_preprocess(df: pd.DataFrame):
     df['item_type_1'] = df['item_name'].apply(lambda x: splitNameType1(x))
     df['item_type_2'] = df['item_name'].apply(lambda x: splitNameType2(x))
 
-    df = df.fillna('0')
+    df.fillna('0', inplace=True)
 
     # 修正商品名稱
     df["item_name"] = df["item_name"].apply(lambda x: name_correction(x))
@@ -170,7 +170,7 @@ def items_preprocess(df: pd.DataFrame):
 
 
 def save_dataframe(df: pd.DataFrame):
-    df.to_hdf('preprocessData.h5', key='df', mode='w', complevel=9)
+    df.to_hdf('preprocessData.h5', key='df', mode='w', complevel=0)
 
 
 def createTotalDataframe():
@@ -238,29 +238,6 @@ def addMonthItemAvgCnt(df: pd.DataFrame):
     return df
 
 
-def addMonthShopAvgCnt(df: pd.DataFrame):
-    group = df.groupby(["date_block_num", "shop_id"]).agg(
-        {"item_cnt_month": ["mean"]})
-    group.columns = ["date_shop_avg_item_cnt"]
-    group.reset_index(inplace=True)
-
-    df = pd.merge(df, group, on=["date_block_num", "shop_id"], how="left")
-
-    return df
-
-
-def addMonthShopItemAvgCnt(df: pd.DataFrame):
-    group = df.groupby(["date_block_num", "shop_id", "item_id"]).agg(
-        {"item_cnt_month": ["mean"]})
-    group.columns = ["date_shop_item_avg_item_cnt"]
-    group.reset_index(inplace=True)
-
-    df = pd.merge(df, group, on=["date_block_num",
-                  "shop_id", "item_id"], how="left")
-
-    return df
-
-
 def addMonthShopsubTypeAvgCnt(df: pd.DataFrame):
     group = df.groupby(['date_block_num', 'shop_id', 'cate_subtype_id']).agg(
         {'item_cnt_month': ['mean']})
@@ -292,52 +269,6 @@ def addMonthCityItemAvgCnt(df: pd.DataFrame):
 
     df = pd.merge(df, group, on=['date_block_num',
                   'item_id', 'shop_city_id'], how='left')
-
-    return df
-
-
-def addAvgPrice(df: pd.DataFrame, df_src: pd.DataFrame):
-    group = df_src.groupby(["item_id"]).agg({"item_price": ["mean"]})
-    group.columns = ["item_avg_item_price"]
-    group.reset_index(inplace=True)
-
-    df = df.merge(group, on=["item_id"], how="left")
-
-    return df
-
-
-def addMonthAvgPrice(df: pd.DataFrame, df_src: pd.DataFrame):
-    group = df_src.groupby(["date_block_num", "item_id"]
-                           ).agg({"item_price": ["mean"]})
-    group.columns = ["date_item_avg_item_price"]
-    group.reset_index(inplace=True)
-
-    df = df.merge(group, on=["date_block_num", "item_id"], how="left")
-
-    return df
-
-
-def priceTrend(df: pd.DataFrame):
-    lags = [1, 2, 3]
-    df = addLag(df, 'date_item_avg_item_price', lags)
-
-    for i in lags:
-        df[f'delta_price_lag_{i}'] = \
-            (df[f'date_item_avg_item_price_lag_{i}'] -
-             df['item_avg_item_price']) / df['item_avg_item_price']
-
-    def select_trends(row):
-        for i in lags:
-            if row[f'delta_price_lag_{i}']:
-                return row[f'delta_price_lag_{i}']
-        return 0
-
-    df["delta_price_lag"] = df.apply(select_trends, axis=1)
-    df["delta_price_lag"].fillna(0, inplace=True)
-
-    df.drop(['date_item_avg_item_price', 'item_avg_item_price'], axis=1, inplace=True)
-    df.drop([f'date_item_avg_item_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
-    df.drop([f'delta_price_lag_{i}' for i in [1, 2, 3]], axis=1, inplace=True)
 
     return df
 
@@ -406,78 +337,77 @@ def addFirstSale(df:pd.DataFrame):
 
     return df
 
-def delnanLag(df:pd.DataFrame):
+
+def del_nan_Lag(df:pd.DataFrame):
     df = df[df["date_block_num"] > 3]
 
     return df
 
 #############################################################################################
-df_train = pd.read_csv('./data/sales_train.csv')
-df_items = pd.read_csv('./data/items.csv')
-df_cate = pd.read_csv('./data/item_categories.csv')
-df_test = pd.read_csv('./data/test.csv')
-df_shop = pd.read_csv('./data/shops.csv')
+def main():
+
+    df_train = pd.read_csv('./data/sales_train.csv')
+    df_items = pd.read_csv('./data/items.csv')
+    df_cate = pd.read_csv('./data/item_categories.csv')
+    df_test = pd.read_csv('./data/test.csv')
+    df_shop = pd.read_csv('./data/shops.csv')
 
 
-#############################################################################################
-df_train = train_preprocess(df_train)
-df_test = test_preprocess(df_test)
-df_shop = shop_preprocess(df_shop)
-df_cate = category_preprocess(df_cate)
-df_items = items_preprocess(df_items)
+    #############################################################################################
+    df_train = train_preprocess(df_train)
+    df_test = test_preprocess(df_test)
+    df_shop = shop_preprocess(df_shop)
+    df_cate = category_preprocess(df_cate)
+    df_items = items_preprocess(df_items)
 
 
-#############################################################################################
-df_total = createTotalDataframe()
+    #############################################################################################
+    df_total = createTotalDataframe()
 
-df_total = createTest(df_total, df_test)
+    df_total = createTest(df_total, df_test)
 
-# 合併
-df_total = combineDf(df_total, df_shop, ['shop_id'])
-df_total = combineDf(df_total, df_items, ['item_id'])
-df_total = combineDf(df_total, df_cate, ['item_category_id'])
+    # 合併
+    df_total = combineDf(df_total, df_shop, ['shop_id'])
+    df_total = combineDf(df_total, df_items, ['item_id'])
+    df_total = combineDf(df_total, df_cate, ['item_category_id'])
 
 
-# 增加銷售量feature
-df_total = addMonthCnt(df_total, df_train)
-df_total = addMonthAvgCnt(df_total)
-df_total = addMonthItemAvgCnt(df_total)
-df_total = addMonthShopAvgCnt(df_total)
-df_total = addMonthShopItemAvgCnt(df_total)
-df_total = addMonthShopsubTypeAvgCnt(df_total)
-df_total = addMonthCityAvgCnt(df_total)
-df_total = addMonthCityItemAvgCnt(df_total)
+    # 增加銷售量feature
+    df_total = addMonthCnt(df_total, df_train)
+    df_total = addMonthAvgCnt(df_total)
+    df_total = addMonthItemAvgCnt(df_total)
+    df_total = addMonthShopsubTypeAvgCnt(df_total)
+    df_total = addMonthCityAvgCnt(df_total)
+    df_total = addMonthCityItemAvgCnt(df_total)
 
-df_total = addLag(df_total, 'item_cnt_month', [1, 2, 3])
-df_total = addLag(df_total, 'date_avg_item_cnt', [1])
-df_total = addLag(df_total, 'date_item_avg_item_cnt', [1, 2, 3])
-df_total = addLag(df_total, 'date_shop_avg_item_cnt', [1, 2, 3])
-df_total = addLag(df_total, 'date_shop_item_avg_item_cnt', [1, 2, 3])
-df_total = addLag(df_total, 'date_shop_subtype_avg_item_cnt', [1])
-df_total = addLag(df_total, 'date_city_avg_item_cnt', [1])
-df_total = addLag(df_total, 'date_item_city_avg_item_cnt', [1])
+    df_total = addLag(df_total, 'item_cnt_month', [1, 2, 3])
+    df_total = addLag(df_total, 'date_avg_item_cnt', [1])
+    df_total = addLag(df_total, 'date_item_avg_item_cnt', [1, 2, 3])
+    df_total = addLag(df_total, 'date_shop_subtype_avg_item_cnt', [1])
+    df_total = addLag(df_total, 'date_city_avg_item_cnt', [1])
+    df_total = addLag(df_total, 'date_item_city_avg_item_cnt', [1])
 
-df_total.drop(['date_avg_item_cnt', 'date_item_avg_item_cnt', 'date_shop_avg_item_cnt',
-               'date_shop_item_avg_item_cnt', 'date_shop_subtype_avg_item_cnt', 'date_city_avg_item_cnt',
-               'date_item_city_avg_item_cnt'], axis=1, inplace=True)
+    df_total.drop(['date_avg_item_cnt', 'date_item_avg_item_cnt', 'date_shop_subtype_avg_item_cnt', 'date_city_avg_item_cnt',
+                'date_item_city_avg_item_cnt'], axis=1, inplace=True)
 
-# 增加銷售額features
-df_total = addAvgPrice(df_total, df_train)
-df_total = addMonthAvgPrice(df_total, df_train)
-df_total = priceTrend(df_total)
-df_total = revenue(df_total, df_train)
+    # 增加銷售額features
+    df_total = revenue(df_total, df_train)
 
-# 拆解月份
-df_total = splitDate(df_total)
+    # 拆解月份
+    df_total = splitDate(df_total)
 
-#
-df_total = addFirstSale(df_total)
+    #
+    df_total = addFirstSale(df_total)
 
-#
-df_total = delnanLag(df_total)
+    # 刪除前幾筆無法產生Lag feature的項目
+    df_total = del_nan_Lag(df_total)
 
-df_total.fillna(0, inplace=True)
+    # NAN -> 0 
+    df_total.fillna(0, inplace=True)
 
-# 儲存
-save_dataframe(df_total)
 
+    # 儲存
+    save_dataframe(df_total)
+
+if __name__ == '__main__':
+    main()
