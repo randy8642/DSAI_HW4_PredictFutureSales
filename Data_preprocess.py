@@ -186,7 +186,7 @@ def createTotalDataframe(df_src:pd.DataFrame):
     cols = ["date_block_num", "shop_id", "item_id"]
     for i in range(34):
         sales = df_src[df_src['date_block_num'] == i]
-        matrix.append(np.array(list(product([i], sales['shop_id'].unique(), sales['item_id'].unique())), dtype=np.int))
+        matrix.append(np.array(list(product([i], sales['shop_id'].unique(), sales['item_id'].unique())), dtype=np.int16))
 
     matrix = pd.DataFrame(np.vstack(matrix), columns=cols)
     matrix["date_block_num"] = matrix["date_block_num"].astype(np.int8)
