@@ -56,11 +56,11 @@ def shop_preprocess(df: pd.DataFrame):
         lambda x: x if (x in category) else 'other')
 
     # 標籤(文字) => 索引(類別編號)
-    # _, df['shopcategory_id'] = np.unique(df['category'], return_inverse=True)
-    # _, df['shop_city_id'] = np.unique(df['city'], return_inverse=True)
+    _, df['shopcategory_id'] = np.unique(df['category'], return_inverse=True)
+    _, df['shop_city_id'] = np.unique(df['city'], return_inverse=True)
 
-    df['shopcategory_id'] = LabelEncoder().fit_transform(df['category'])
-    df['shop_city_id'] = LabelEncoder().fit_transform(df['city'])
+    # df['shopcategory_id'] = LabelEncoder().fit_transform(df['category'])
+    # df['shop_city_id'] = LabelEncoder().fit_transform(df['city'])
 
     # 新df
     df = df[["shop_id", "shopcategory_id", "shop_city_id"]]
@@ -89,11 +89,11 @@ def category_preprocess(df: pd.DataFrame):
         lambda x: x if (x in category) else 'etc')
 
     # 標籤(文字) => 索引(類別編號)
-    # _, df['cate_type_id'] = np.unique(df['cate_type'], return_inverse=True)
-    # _, df['cate_subtype_id'] = np.unique(df['cate_subtype'], return_inverse=True)
+    _, df['cate_type_id'] = np.unique(df['cate_type'], return_inverse=True)
+    _, df['cate_subtype_id'] = np.unique(df['cate_subtype'], return_inverse=True)
 
-    df['cate_type_id'] = LabelEncoder().fit_transform(df['cate_type'])
-    df['cate_subtype_id'] = LabelEncoder().fit_transform(df['cate_subtype'])
+    # df['cate_type_id'] = LabelEncoder().fit_transform(df['cate_type'])
+    # df['cate_subtype_id'] = LabelEncoder().fit_transform(df['cate_subtype'])
 
     # 新df
     df = df[['item_category_id', 'cate_type_id', 'cate_subtype_id']]
@@ -166,11 +166,11 @@ def items_preprocess(df: pd.DataFrame):
     df = df.drop(['type'], axis=1)
 
     # 標籤(文字) => 索引(類別編號)
-    # _, df['item_type_1_id'] = np.unique(df['item_type_1'], return_inverse=True)
-    # _, df['item_type_2_id'] = np.unique(df['item_type_2'], return_inverse=True)
+    _, df['item_type_1_id'] = np.unique(df['item_type_1'], return_inverse=True)
+    _, df['item_type_2_id'] = np.unique(df['item_type_2'], return_inverse=True)
 
-    df['item_type_1_id'] = LabelEncoder().fit_transform(df['item_type_1'])
-    df['item_type_2_id'] = LabelEncoder().fit_transform(df['item_type_2'])
+    # df['item_type_1_id'] = LabelEncoder().fit_transform(df['item_type_1'])
+    # df['item_type_2_id'] = LabelEncoder().fit_transform(df['item_type_2'])
 
     # 新df
     df = df[['item_id', 'item_category_id', 'item_type_1_id', 'item_type_2_id']]
