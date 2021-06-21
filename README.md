@@ -31,7 +31,7 @@ NCKU DSAI course homework
 4. 訓練模型，得到訓練好的模型 (`XGmodel`)\
 `python main_train.py`
 
-5. 執行預訓練的模型，並得到預測資料 (`XG_RY.csv`)\
+5. 執行預訓練的模型，並得到預測資料 (`submission.csv`)\
 `python main.py`
 
 ### 最終分數 (RMSE)
