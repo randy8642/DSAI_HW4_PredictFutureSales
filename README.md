@@ -6,9 +6,6 @@ NCKU DSAI course homework
 * 說明連結與kaggle資料集
 [https://www.kaggle.com/c/competitive-data-science-predict-future-sales/overview](https://www.kaggle.com/c/competitive-data-science-predict-future-sales/overview)
 
-* 期末報告
-[Final Report](https://docs.google.com/document/d/1Mp7WYp4-e5scwGlABrtycoBrwPNWF5Msgc4EOa2OqDU/edit?usp=sharing)
-
 * 目標\
 以過去34個月各商家的不同商品之交易量，\
 預測未來一個月特定商家的數種商品之月銷量。
@@ -36,3 +33,14 @@ NCKU DSAI course homework
 
 ### 最終分數 (RMSE)
 ![Imgur](https://i.imgur.com/dFeuRl4.png)
+
+
+### 期末報告
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/001.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/002.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/003.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/004.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/005.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/006.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/007.jpg)
+![](https://github.com/randy8642/DSAI_HW4_PredictFutureSales/blob/main/img/008.jpg)
